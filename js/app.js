@@ -22,6 +22,7 @@
       mode: "srs"
     },
     quiz: null,
+    menuOpen: false,
     vocab: { search: "", sort: "alpha", topics: [], pos: [], lessons: [], openId: null }
   };
 
@@ -111,6 +112,7 @@
   function renderHeader() {
     var host = document.getElementById("header");
     host.innerHTML = "";
+    host.dataset.menu = state.menuOpen ? "open" : "closed";
 
     var langSwitch = el("div", { class: "lang-switch", role: "group" }, ["es", "sr"].map(function (lang) {
       return el("button", {
@@ -141,11 +143,18 @@
       }
     }, ["+"]);
 
+    var burger = el("button", {
+      class: "hamburger", type: "button",
+      "aria-label": t("menu"), "aria-expanded": String(state.menuOpen),
+      onclick: function () { state.menuOpen = !state.menuOpen; renderHeader(); trackHeaderHeight(); }
+    }, [el("span", { class: "burger-bars", "aria-hidden": "true" })]);
+
     host.appendChild(el("div", { class: "top-inner" }, [
       el("div", { class: "brand" }, [
         el("span", { class: "flag", "aria-hidden": "true" }),
         el("h1", { text: t("appName") })
       ]),
+      burger,
       el("div", { class: "profile-pick" }, [select, addBtn]),
       langSwitch
     ]));
@@ -154,7 +163,14 @@
     host.appendChild(el("nav", { class: "tabs" }, tabs.map(function (tab) {
       return el("a", {
         href: ROUTES[tab[0]],
-        "aria-current": state.view === tab[0] ? "page" : null
+        "aria-current": state.view === tab[0] ? "page" : null,
+        onclick: function () {
+          // isti tab ne menja hash, pa nema hashchange koji bi prekrio zaglavlje
+          if (!state.menuOpen) return;
+          state.menuOpen = false;
+          renderHeader();
+          trackHeaderHeight();
+        }
       }, [t(tab[1])]);
     })));
   }
@@ -251,6 +267,7 @@
     if (overrides && overrides.topicId) {
       var picked = global.Store.grammarQuestions.filter(function (q) { return q.topicId === overrides.topicId; });
       state.quiz = {
+        meta: { topicId: overrides.topicId },
         questions: picked.map(function (q) {
           return {
             srsId: "g:" + q.id, type: "grammar", prompt: q.sentence,
@@ -261,7 +278,11 @@
         index: 0, answers: [], done: false
       };
     } else {
-      state.quiz = { questions: global.Quiz.build(options), index: 0, answers: [], done: false };
+      state.quiz = {
+        meta: { types: options.types.slice(), lessons: options.lessons.slice(), mode: options.mode },
+        questions: global.Quiz.build(options),
+        index: 0, answers: [], done: false
+      };
     }
     state.view = "quiz";
     render();
@@ -332,6 +353,10 @@
       subText ? el("p", { class: "q-sub", text: subText }) : null,
       options];
 
+    var backBtn = quiz.index > 0
+      ? el("button", { class: "btn ghost", type: "button", onclick: previous }, ["← " + t("previous")])
+      : null;
+
     if (answered) {
       var ok = answered.correct;
       var explain = question.explain ? pick(question.explain) : "";
@@ -346,10 +371,13 @@
       ]);
       body.push(verdict);
       body.push(el("div", { class: "q-actions" }, [
+        backBtn,
         el("button", { class: "btn", type: "button", onclick: next }, [
           quiz.index + 1 >= quiz.questions.length ? t("finish") : t("next")
         ])
       ]));
+    } else if (backBtn) {
+      body.push(el("div", { class: "q-actions" }, [backBtn]));
     }
 
     return el("div", {}, [el("div", { class: "card" }, body)]);
@@ -365,6 +393,13 @@
     render();
   }
 
+  function previous() {
+    if (state.quiz.index === 0) return;
+    state.quiz.index -= 1;
+    render();
+    global.scrollTo(0, 0);
+  }
+
   function next() {
     var quiz = state.quiz;
     if (quiz.index + 1 >= quiz.questions.length) {
@@ -372,7 +407,10 @@
       global.SRS.finishQuiz({
         total: quiz.questions.length,
         correct: quiz.answers.filter(function (a) { return a && a.correct; }).length,
-        types: state.prefs.types.slice()
+        types: quiz.meta.types,
+        lessons: quiz.meta.lessons,
+        mode: quiz.meta.mode,
+        topicId: quiz.meta.topicId
       });
     } else {
       quiz.index += 1;
@@ -557,11 +595,14 @@
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onToggle(word.id); }
       }
     }, [
-      el("span", { class: "word-art", text: word.article ? "(" + word.article + ")" : "" }),
       el("span", { class: "word-es", text: word.root }),
+      word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
       speakButton(word.speakText),
       el("span", { class: "word-sr", text: word.sr }),
-      el("span", { class: "tag", text: posLabel }),
+      el("span", { class: "tag" }, [
+        el("span", { class: "tag-full", text: posLabel }),
+        el("span", { class: "tag-short", text: t("posShort")[word.pos] || posLabel })
+      ]),
       el("span", { class: "word-caret", "aria-hidden": "true" })
     ]);
 
@@ -721,6 +762,26 @@
     return word ? word.es + " · " + word.sr : id;
   }
 
+  /** Opis kviza za istoriju: šta je vežbano i iz kog dela baze. */
+  function quizLabel(row) {
+    if (row.topicId) {
+      var topic = global.Store.grammar.filter(function (g) { return g.id === row.topicId; })[0];
+      return { main: topic ? pick(topic.title) : row.topicId, sub: t("navGrammar") };
+    }
+
+    var types = row.types || [];
+    var main = types.length >= 5
+      ? t("allTypes")
+      : types.map(function (type) { return t("typeShort")[type] || type; }).join(", ");
+
+    var parts = [];
+    var lessons = row.lessons || [];
+    parts.push(lessons.length ? global.I18n.lessonsCount(lessons.length) : t("allLessons"));
+    if (row.mode) parts.push(row.mode === "srs" ? t("modeSrs") : t("modeRandom"));
+
+    return { main: main || "—", sub: parts.join(" · ") };
+  }
+
   function renderStats() {
     var ids = global.Store.words.map(function (w) { return w.id; })
       .concat(global.Store.grammarQuestions.map(function (q) { return "g:" + q.id; }));
@@ -755,12 +816,23 @@
     var histTable = history.length
       ? el("table", { class: "hist" }, [
           el("thead", {}, [el("tr", {}, [
-            el("th", { text: t("date") }), el("th", { text: t("score") }), el("th", { text: t("accuracy") })
+            el("th", { text: t("date") }),
+            el("th", { text: t("quizColumn") }),
+            el("th", { text: t("score") }),
+            el("th", { text: t("accuracy") })
           ])]),
           el("tbody", {}, history.slice(0, 12).map(function (row) {
             var when = new Date(row.at);
+            var label = quizLabel(row);
             return el("tr", {}, [
-              el("td", { text: when.toLocaleDateString() + " " + when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }),
+              el("td", { class: "hist-when" }, [
+                when.toLocaleDateString(),
+                el("div", { class: "small muted", text: when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+              ]),
+              el("td", {}, [
+                label.main,
+                label.sub ? el("div", { class: "small muted", text: label.sub }) : null
+              ]),
               el("td", { text: row.correct + " / " + row.total }),
               el("td", { text: Math.round(row.correct / row.total * 100) + "%" })
             ]);
@@ -821,9 +893,12 @@
     if (ev.key >= "1" && ev.key <= "4") {
       var index = Number(ev.key) - 1;
       if (question.options[index]) { ev.preventDefault(); answer(question.options[index]); }
-    } else if ((ev.key === "Enter" || ev.key === " ") && quiz.answers[quiz.index]) {
+    } else if ((ev.key === "Enter" || ev.key === " " || ev.key === "ArrowRight") && quiz.answers[quiz.index]) {
       ev.preventDefault();
       next();
+    } else if (ev.key === "ArrowLeft") {
+      ev.preventDefault();
+      previous();
     }
   }
 

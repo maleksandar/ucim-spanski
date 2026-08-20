@@ -112,7 +112,10 @@
         at: today(),
         total: summary.total,
         correct: summary.correct,
-        types: summary.types
+        types: summary.types,
+        lessons: summary.lessons,
+        mode: summary.mode,
+        topicId: summary.topicId
       });
       if (profile.history.length > 200) profile.history = profile.history.slice(-200);
       write(state);

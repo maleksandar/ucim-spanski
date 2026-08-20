@@ -78,6 +78,18 @@
         sustantivo: "Imenice", verbo: "Glagoli", adjetivo: "Pridevi",
         adverbio: "Prilozi", "expresión": "Izrazi"
       },
+      posShort: {
+        sustantivo: "imen.", verbo: "glag.", adjetivo: "prid.",
+        adverbio: "pril.", "expresión": "izr."
+      },
+      typeShort: {
+        "es-sr": "ŠPA→SRP", "sr-es": "SRP→ŠPA", cloze: "praznina",
+        grammar: "gramatika", conjug: "konjugacija"
+      },
+      allTypes: "svi tipovi",
+      quizColumn: "Kviz",
+      menu: "Meni",
+      previous: "Nazad",
       definition: "Objašnjenje",
       lesson: "Lekcija",
       listen: "Izgovor",
@@ -183,6 +195,18 @@
         sustantivo: "Sustantivos", verbo: "Verbos", adjetivo: "Adjetivos",
         adverbio: "Adverbios", "expresión": "Expresiones"
       },
+      posShort: {
+        sustantivo: "sust.", verbo: "verb.", adjetivo: "adj.",
+        adverbio: "adv.", "expresión": "expr."
+      },
+      typeShort: {
+        "es-sr": "ES→SR", "sr-es": "SR→ES", cloze: "frase",
+        grammar: "gramática", conjug: "conjugación"
+      },
+      allTypes: "todos los tipos",
+      quizColumn: "Cuestionario",
+      menu: "Menú",
+      previous: "Anterior",
       definition: "Explicación",
       lesson: "Clase",
       listen: "Escuchar",
