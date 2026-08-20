@@ -22,7 +22,7 @@
       mode: "srs"
     },
     quiz: null,
-    vocab: { search: "", sort: "alpha", topic: "", pos: "", lesson: "" }
+    vocab: { search: "", sort: "alpha", topic: "", pos: "", lesson: "", openId: null }
   };
 
   // ---------- pomoćne ----------
@@ -460,30 +460,50 @@
     return words;
   }
 
-  function wordCard(word) {
+  function wordCard(word, onToggle) {
     var posLabel = t("pos")[word.pos] || word.pos;
-    return el("div", { class: "word" }, [
-      el("div", { class: "word-head" }, [
-        word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
-        el("span", { class: "word-es", text: word.root }),
-        speakButton(word.speakText),
-        el("span", { class: "word-sr", text: word.sr }),
-        el("span", { class: "tag", text: posLabel })
-      ]),
+    var open = state.vocab.openId === word.id;
+
+    var body = el("div", { class: "word-body" }, [
       word.def ? el("div", { class: "word-def", text: word.def }) : null,
-      word.ex.length ? el("ul", { class: "word-ex" }, word.ex.map(function (ex) {
-        return el("li", {}, [
-          el("span", {}, [ex.es, " ", speakButton(ex.es)]),
-          ex.sr ? el("div", { class: "sr", text: ex.sr }) : null
-        ]);
-      })) : null
+      word.ex.length
+        ? el("ul", { class: "word-ex" }, word.ex.map(function (ex) {
+            return el("li", {}, [
+              el("span", {}, [ex.es, " ", speakButton(ex.es)]),
+              ex.sr ? el("div", { class: "sr", text: ex.sr }) : null
+            ]);
+          }))
+        : el("p", { class: "word-noex", text: t("noExample") })
     ]);
+
+    var head = el("div", {
+      class: "word-head",
+      role: "button",
+      tabindex: "0",
+      "aria-expanded": String(open),
+      onclick: function () { onToggle(word.id); },
+      onkeydown: function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onToggle(word.id); }
+      }
+    }, [
+      word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
+      el("span", { class: "word-es", text: word.root }),
+      speakButton(word.speakText),
+      el("span", { class: "word-sr", text: word.sr }),
+      el("span", { class: "tag", text: posLabel }),
+      el("span", { class: "word-caret", "aria-hidden": "true" })
+    ]);
+
+    var card = el("div", { class: "word" + (open ? " open" : "") }, [head, body]);
+    card.dataset.wordId = word.id;
+    return card;
   }
 
   function renderVocab() {
     var vocab = state.vocab;
     var listHost = el("div", { class: "word-list" });
     var countNode = el("p", { class: "small muted vocab-count" });
+    var cards = Object.create(null);
 
     // samo lista se osvežava pri kucanju — inače bi polje za pretragu
     // bilo ponovo napravljeno i izgubilo fokus posle svakog slova
@@ -496,6 +516,7 @@
         return;
       }
       var lastGroup = null;
+      cards = Object.create(null);
       words.forEach(function (word) {
         var group = vocab.sort === "topic" ? pick(word.topic)
           : vocab.sort === "lesson"
@@ -506,7 +527,22 @@
           listHost.appendChild(el("h3", { class: "group-head", text: group }));
           lastGroup = group;
         }
-        listHost.appendChild(wordCard(word));
+        cards[word.id] = wordCard(word, toggleWord);
+        listHost.appendChild(cards[word.id]);
+      });
+    }
+
+    // otvara se samo jedna reč; menjaju se dve kartice, lista se ne crta ponovo,
+    // pa fokus ostaje na redu koji si upravo pritisnuo
+    function toggleWord(id) {
+      var previous = state.vocab.openId;
+      state.vocab.openId = previous === id ? null : id;
+      [previous, id].forEach(function (each) {
+        var card = each && cards[each];
+        if (!card) return;
+        var isOpen = state.vocab.openId === each;
+        card.classList.toggle("open", isOpen);
+        card.querySelector(".word-head").setAttribute("aria-expanded", String(isOpen));
       });
     }
 

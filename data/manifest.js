@@ -1,5 +1,5 @@
 /* Generisano skriptom tools/manifest.py — ne menjaj rucno. */
-window.ASSET_VERSION = "92cfeee2";
+window.ASSET_VERSION = "d662f7d6";
 window.LESSON_FILES = [
   "lessons/2026-07-09.js",
   "lessons/2026-07-22.js",
