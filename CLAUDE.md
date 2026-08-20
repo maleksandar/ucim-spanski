@@ -119,6 +119,12 @@ python3 tools/manifest.py
 node tools/selftest.js
 ```
 
+`manifest.py` uz spisak lekcija računa i verziju (heš sadržaja svih js/css/data
+fajlova) pa je upisuje kao `?v=…` u `index.html` i kao `ASSET_VERSION` u
+`manifest.js`. Zato ga pokreni **posle poslednje izmene** — inače bi browser
+mogao da pomeša staru i novu verziju fajlova iz keša. `selftest.js` to proverava
+i javlja ako je verzija zastarela.
+
 Test mora da prođe bez ijednog problema. Ispisuje i koliko reči može da da
 pitanje tipa „popuni prazninu" — ako taj broj primetno zaostaje za ukupnim
 brojem reči, znači da fale `forms`.

@@ -59,8 +59,10 @@
     failed: [],
 
     load: function () {
-      var files = (global.LESSON_FILES || []).map(function (f) { return "data/" + f; });
-      files.push("data/verbs.js");
+      // ista verzija kao ostali fajlovi, da se iz keša ne pokupi pola stare baze
+      var version = global.ASSET_VERSION ? "?v=" + global.ASSET_VERSION : "";
+      var files = (global.LESSON_FILES || []).map(function (f) { return "data/" + f + version; });
+      files.push("data/verbs.js" + version);
       // jedan lekcijski fajl koji ne stigne ne sme da obori ceo sajt
       return files.reduce(function (chain, src) {
         return chain.then(function () {

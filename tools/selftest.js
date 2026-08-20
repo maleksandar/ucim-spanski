@@ -3,6 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
+const crypto = require("crypto");
+
 const repo = path.join(__dirname, "..");
 const sandbox = { console, Math, Date, JSON, Promise, setTimeout };
 sandbox.window = sandbox;
@@ -122,6 +124,23 @@ console.log("SRS:", JSON.stringify(sandbox.SRS.stats(ids)));
 console.log(`\nlekcija: ${S.lessons.length}  reči: ${S.words.length}  gram. tema: ${S.grammar.length}  ` +
   `gram. pitanja: ${S.grammarQuestions.length}  glagola: ${S.verbs.length}`);
 console.log(`reči spremnih za "popuni prazninu": ${clozeReady.length} / ${S.words.length}`);
+
+// 6. verzija fajlova mora da odgovara sadržaju — inače je zaboravljen tools/manifest.py
+const versioned = ["css/style.css"]
+  .concat(fs.readdirSync(path.join(repo, "js")).sort().map((f) => "js/" + f))
+  .concat(["data/verbs.js"])
+  .concat(fs.readdirSync(path.join(repo, "data/lessons")).sort().map((f) => "data/lessons/" + f));
+const digest = crypto.createHash("sha256");
+versioned.forEach((rel) => {
+  digest.update(rel);
+  digest.update(fs.readFileSync(path.join(repo, rel)));
+});
+const expected = digest.digest("hex").slice(0, 8);
+if (sandbox.ASSET_VERSION !== expected) {
+  problems.push(
+    `verzija fajlova je zastarela (${sandbox.ASSET_VERSION} umesto ${expected}) — pokreni: python3 tools/manifest.py`
+  );
+}
 
 if (problems.length) {
   console.log(`\n${problems.length} PROBLEMA:`);

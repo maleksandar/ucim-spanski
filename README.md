@@ -33,7 +33,7 @@ data/manifest.js      spisak lekcija (generisan)
 data/lessons/*.js     jedna lekcija = jedan fajl
 data/verbs.js         glagoli za konjugaciju
 tools/extract.py      izvlačenje teksta iz Drive materijala
-tools/manifest.py     regenerisanje manifesta
+tools/manifest.py     regenerisanje manifesta i verzije fajlova
 tools/selftest.js     provera baze i kviz motora
 staging/*.txt         izvučen tekst, ulaz za nedeljnu sesiju
 ```
