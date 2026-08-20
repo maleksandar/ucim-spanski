@@ -1,0 +1,8 @@
+# lokalna putanja do Drive foldera
+tools/config.json
+
+# izvučen tekst originalnih materijala — radni ulaz, ne objavljuje se
+staging/
+
+.DS_Store
+node_modules/
