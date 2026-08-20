@@ -10,6 +10,9 @@
     grammar: "typeGrammar", conjug: "typeConjug"
   };
 
+  // ruta ↔ prikaz; hash je jedini izvor istine za to gde smo
+  var ROUTES = { quiz: "#/quiz", vocab: "#/vocab", grammar: "#/grammar", stats: "#/stats" };
+
   var state = {
     view: "quiz",
     prefs: {
@@ -40,6 +43,19 @@
       node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
     });
     return node;
+  }
+
+  function viewFromHash() {
+    var name = String(global.location.hash || "").replace(/^#\/?/, "").split(/[?&]/)[0];
+    return ROUTES[name] ? name : null;
+  }
+
+  function onHashChange() {
+    var view = viewFromHash() || "quiz";
+    if (view === state.view) return;
+    state.view = view;
+    render();
+    global.scrollTo(0, 0);
   }
 
   function t(key) { return global.I18n.t(key); }
@@ -105,6 +121,7 @@
           try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* ignore */ }
           document.documentElement.lang = lang === "es" ? "es" : "sr";
           render();
+          trackHeaderHeight();
         }
       }, [lang.toUpperCase()]);
     }));
@@ -135,10 +152,9 @@
 
     var tabs = [["quiz", "navQuiz"], ["vocab", "navVocab"], ["grammar", "navGrammar"], ["stats", "navStats"]];
     host.appendChild(el("nav", { class: "tabs" }, tabs.map(function (tab) {
-      return el("button", {
-        type: "button",
-        "aria-current": state.view === tab[0] ? "page" : null,
-        onclick: function () { state.view = tab[0]; state.quiz = null; render(); }
+      return el("a", {
+        href: ROUTES[tab[0]],
+        "aria-current": state.view === tab[0] ? "page" : null
       }, [t(tab[1])]);
     })));
   }
@@ -150,6 +166,12 @@
       class: "chip" + (isOn ? " on" : ""),
       onclick: function (ev) { ev.preventDefault(); onToggle(); }
     }, [el("span", { class: "dot" }), label]);
+  }
+
+  function lessonOptions() {
+    return global.Store.lessons.map(function (lesson) {
+      return { value: lesson.id, label: formatDate(lesson.date) + " " + pick(lesson.title) };
+    });
   }
 
   function renderQuizSetup() {
@@ -166,24 +188,23 @@
       }))
     ]);
 
-    var lessonChips = [chip(t("allLessons"), state.prefs.lessons.length === 0, function () {
-      state.prefs.lessons = [];
-      savePrefs();
-      render();
-    })].concat(global.Store.lessons.map(function (lesson) {
-      var on = state.prefs.lessons.indexOf(lesson.id) !== -1;
-      return chip(formatDate(lesson.date) + " " + pick(lesson.title), on, function () {
-        var at = state.prefs.lessons.indexOf(lesson.id);
-        if (at === -1) state.prefs.lessons.push(lesson.id);
-        else state.prefs.lessons.splice(at, 1);
-        savePrefs();
-        render();
-      });
-    }));
+    var lessonPicker = global.Dropdown.create({
+      multiple: true,
+      label: "",
+      placeholder: t("allLessons"),
+      options: lessonOptions(),
+      value: state.prefs.lessons.slice(),
+      defaultValue: [],
+      countLabel: function (n) { return global.I18n.lessonsCount(n); },
+      searchLabel: t("ddSearch"),
+      clearLabel: t("ddClear"),
+      emptyLabel: t("ddEmpty"),
+      onChange: function (chosen) { state.prefs.lessons = chosen; savePrefs(); }
+    });
 
     var lessonField = el("div", { class: "field" }, [
       el("label", { class: "head", text: t("quizSource") }),
-      el("div", { class: "chips" }, lessonChips)
+      lessonPicker.node
     ]);
 
     var modeField = el("div", { class: "field" }, [
@@ -407,17 +428,19 @@
 
   // ---------- rečnik ----------
 
-  function renderVocab() {
+  function filterWords() {
     var vocab = state.vocab;
-    var query = vocab.search.trim().toLowerCase();
+    var query = global.Dropdown.fold(vocab.search.trim());
 
     var words = global.Store.words.filter(function (w) {
       if (vocab.pos && w.pos !== vocab.pos) return false;
       if (vocab.topic && w.topic.es !== vocab.topic) return false;
       if (vocab.lesson && w.lessons.indexOf(vocab.lesson) === -1) return false;
       if (!query) return true;
-      var haystack = [w.es, w.sr, w.def].concat(w.ex.map(function (e) { return e.es + " " + e.sr; })).join(" ").toLowerCase();
-      return haystack.indexOf(query) !== -1;
+      var haystack = [w.es, w.sr, w.def]
+        .concat(w.ex.map(function (e) { return e.es + " " + e.sr; }))
+        .join(" ");
+      return global.Dropdown.fold(haystack).indexOf(query) !== -1;
     });
 
     if (vocab.sort === "alpha") {
@@ -431,72 +454,104 @@
         return a.lessons[0].localeCompare(b.lessons[0]) || a.es.localeCompare(b.es, "es");
       });
     }
+    return words;
+  }
+
+  function wordCard(word) {
+    var posLabel = t("pos")[word.pos] || word.pos;
+    return el("div", { class: "word" }, [
+      el("div", { class: "word-head" }, [
+        el("span", { class: "word-es", text: word.es }),
+        speakButton(word.es.replace(/^el\/la\s+/, "").split("/")[0].trim()),
+        el("span", { class: "word-sr", text: word.sr }),
+        el("span", { class: "tag", text: posLabel })
+      ]),
+      word.def ? el("div", { class: "word-def", text: word.def }) : null,
+      word.ex.length ? el("ul", { class: "word-ex" }, word.ex.map(function (ex) {
+        return el("li", {}, [
+          el("span", {}, [ex.es, " ", speakButton(ex.es)]),
+          ex.sr ? el("div", { class: "sr", text: ex.sr }) : null
+        ]);
+      })) : null
+    ]);
+  }
+
+  function renderVocab() {
+    var vocab = state.vocab;
+    var listHost = el("div", { class: "word-list" });
+    var countNode = el("p", { class: "small muted vocab-count" });
+
+    // samo lista se osvežava pri kucanju — inače bi polje za pretragu
+    // bilo ponovo napravljeno i izgubilo fokus posle svakog slova
+    function update() {
+      var words = filterWords();
+      countNode.textContent = words.length + " " + t("wordsShown");
+      listHost.innerHTML = "";
+      if (!words.length) {
+        listHost.appendChild(el("p", { class: "empty", text: t("noResults") }));
+        return;
+      }
+      var lastGroup = null;
+      words.forEach(function (word) {
+        var group = vocab.sort === "topic" ? pick(word.topic)
+          : vocab.sort === "lesson"
+            ? formatDate((global.Store.lessonById(word.lessons[0]) || {}).date || "") +
+              " " + global.Store.lessonTitle(word.lessons[0])
+            : null;
+        if (group && group !== lastGroup) {
+          listHost.appendChild(el("h3", { class: "group-head", text: group }));
+          lastGroup = group;
+        }
+        listHost.appendChild(wordCard(word));
+      });
+    }
+
+    function picker(config) {
+      config.searchLabel = t("ddSearch");
+      config.clearLabel = t("ddClear");
+      config.emptyLabel = t("ddEmpty");
+      return global.Dropdown.create(config).node;
+    }
+
+    var filters = el("div", { class: "toolbar-filters" }, [
+      picker({
+        label: t("filterTopic"), placeholder: t("all"), value: vocab.topic, defaultValue: "",
+        options: [{ value: "", label: t("all") }].concat(global.Store.topics.map(function (topic) {
+          return { value: topic.es, label: pick(topic) };
+        })),
+        onChange: function (chosen) { vocab.topic = chosen; update(); }
+      }),
+      picker({
+        label: t("filterLesson"), placeholder: t("all"), value: vocab.lesson, defaultValue: "",
+        options: [{ value: "", label: t("all") }].concat(lessonOptions()),
+        onChange: function (chosen) { vocab.lesson = chosen; update(); }
+      }),
+      picker({
+        label: t("sortBy"), value: vocab.sort, defaultValue: "alpha",
+        options: [
+          { value: "alpha", label: t("sortAlpha") },
+          { value: "lesson", label: t("sortLesson") },
+          { value: "topic", label: t("sortTopic") }
+        ],
+        onChange: function (chosen) { vocab.sort = chosen; update(); }
+      })
+    ]);
 
     var toolbar = el("div", { class: "toolbar" }, [
       el("input", {
         class: "search", type: "search", placeholder: t("searchPlaceholder"), value: vocab.search,
-        oninput: function (ev) { vocab.search = ev.target.value; renderMain(); }
+        oninput: function (ev) { vocab.search = ev.target.value; update(); }
       }),
-      el("select", {
-        "aria-label": t("filterTopic"),
-        onchange: function (ev) { vocab.topic = ev.target.value; renderMain(); }
-      }, [el("option", { value: "" }, [t("filterTopic") + ": " + t("all")])].concat(
-        global.Store.topics.map(function (topic) {
-          return el("option", { value: topic.es, selected: vocab.topic === topic.es }, [pick(topic)]);
-        })
-      )),
-      el("select", {
-        "aria-label": t("filterLesson"),
-        onchange: function (ev) { vocab.lesson = ev.target.value; renderMain(); }
-      }, [el("option", { value: "" }, [t("filterLesson") + ": " + t("all")])].concat(
-        global.Store.lessons.map(function (lesson) {
-          return el("option", { value: lesson.id, selected: vocab.lesson === lesson.id }, [formatDate(lesson.date)]);
-        })
-      )),
-      el("select", {
-        "aria-label": "sort",
-        onchange: function (ev) { vocab.sort = ev.target.value; renderMain(); }
-      }, [
-        el("option", { value: "alpha", selected: vocab.sort === "alpha" }, [t("sortAlpha")]),
-        el("option", { value: "lesson", selected: vocab.sort === "lesson" }, [t("sortLesson")]),
-        el("option", { value: "topic", selected: vocab.sort === "topic" }, [t("sortTopic")])
-      ])
+      filters
     ]);
 
-    var list = el("div", { class: "word-list" }, []);
-    var lastGroup = null;
-
-    words.forEach(function (word) {
-      var group = vocab.sort === "topic" ? pick(word.topic)
-        : vocab.sort === "lesson" ? formatDate((global.Store.lessonById(word.lessons[0]) || {}).date || "") + " " + global.Store.lessonTitle(word.lessons[0])
-        : null;
-      if (group && group !== lastGroup) {
-        list.appendChild(el("h3", { class: "group-head", text: group }));
-        lastGroup = group;
-      }
-      var posLabel = t("pos")[word.pos] || word.pos;
-      list.appendChild(el("div", { class: "word" }, [
-        el("div", { class: "word-head" }, [
-          el("span", { class: "word-es", text: word.es }),
-          speakButton(word.es.replace(/^el\/la\s+/, "").split("/")[0].trim()),
-          el("span", { class: "word-sr", text: word.sr }),
-          el("span", { class: "tag", text: posLabel })
-        ]),
-        word.def ? el("div", { class: "word-def", text: word.def }) : null,
-        word.ex.length ? el("ul", { class: "word-ex" }, word.ex.map(function (ex) {
-          return el("li", {}, [
-            el("span", {}, [ex.es, " ", speakButton(ex.es)]),
-            ex.sr ? el("div", { class: "sr", text: ex.sr }) : null
-          ]);
-        })) : null
-      ]));
-    });
+    update();
 
     return el("div", {}, [
       el("h2", { class: "section", text: t("navVocab") }),
       toolbar,
-      el("p", { class: "small muted", style: "margin:0 0 .7rem" }, [words.length + " " + t("wordsShown")]),
-      words.length ? list : el("p", { class: "empty", text: t("noResults") })
+      countNode,
+      listHost
     ]);
   }
 
@@ -647,6 +702,17 @@
     }
   }
 
+  /** Sticky traka u rečniku mora da zna koliko je zaglavlje visoko. */
+  function trackHeaderHeight() {
+    var header = document.getElementById("header");
+    function apply() {
+      document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+    }
+    apply();
+    if (global.ResizeObserver) new global.ResizeObserver(apply).observe(header);
+    else global.addEventListener("resize", apply);
+  }
+
   function init() {
     try {
       var saved = localStorage.getItem(LANG_KEY);
@@ -655,15 +721,23 @@
     document.documentElement.lang = global.I18n.lang === "es" ? "es" : "sr";
     loadPrefs();
 
+    var initialView = viewFromHash();
+    if (initialView) state.view = initialView;
+    else if (global.history && global.history.replaceState) {
+      global.history.replaceState(null, "", ROUTES[state.view]);
+    }
+
     global.Store.load().then(function () {
       if (global.Store.failed.length) {
         console.warn("Nisu učitane lekcije:", global.Store.failed.join(", "));
       }
       document.addEventListener("keydown", onKey);
+      global.addEventListener("hashchange", onHashChange);
       if (global.speechSynthesis) {
         global.speechSynthesis.onvoiceschanged = function () { voice = null; };
       }
       render();
+      trackHeaderHeight();
     }).catch(function (err) {
       document.getElementById("main").innerHTML =
         '<div class="card empty">Greška pri učitavanju baze: ' + err.message + "</div>";

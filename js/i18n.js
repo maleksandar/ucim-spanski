@@ -50,6 +50,10 @@
       quizEmpty: "Nema pitanja za izabrane filtere. Uključi još tipova ili lekcija.",
 
       searchPlaceholder: "Traži reč, prevod ili primer…",
+      sortBy: "Redosled",
+      ddSearch: "Traži…",
+      ddClear: "Poništi izbor",
+      ddEmpty: "Nema rezultata.",
       sortAlpha: "Abecedno (ŠPA)",
       sortLesson: "Po lekciji",
       sortTopic: "Po temi",
@@ -137,6 +141,10 @@
       quizEmpty: "No hay preguntas con estos filtros. Activa más tipos o más clases.",
 
       searchPlaceholder: "Busca una palabra, traducción o ejemplo…",
+      sortBy: "Orden",
+      ddSearch: "Buscar…",
+      ddClear: "Borrar la selección",
+      ddEmpty: "Sin resultados.",
       sortAlpha: "Alfabético (ES)",
       sortLesson: "Por clase",
       sortTopic: "Por tema",
@@ -191,9 +199,20 @@
     es: function (n) { return n === 1 ? "fallo" : "fallos"; }
   };
 
+  var LESSON_PLURALS = {
+    sr: function (n) {
+      var mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return n + " lekcija";
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return n + " lekcije";
+      return n + " lekcija";
+    },
+    es: function (n) { return n + (n === 1 ? " clase" : " clases"); }
+  };
+
   var api = {
     get lang() { return current; },
     mistakes: function (n) { return PLURALS[current](n); },
+    lessonsCount: function (n) { return LESSON_PLURALS[current](n); },
     set: function (lang) {
       if (STRINGS[lang]) current = lang;
       return current;
