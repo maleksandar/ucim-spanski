@@ -23,7 +23,7 @@ function run(rel) {
   vm.runInContext(fs.readFileSync(path.join(repo, rel), "utf8"), sandbox, { filename: rel });
 }
 
-["js/text.js", "js/i18n.js", "js/conjugator.js", "js/store.js", "js/srs.js", "js/quiz.js", "data/manifest.js"].forEach(run);
+["js/text.js", "js/i18n.js", "js/conjugator.js", "js/inflector.js", "js/store.js", "js/srs.js", "js/quiz.js", "data/manifest.js"].forEach(run);
 sandbox.LESSON_FILES.forEach((f) => run("data/" + f));
 run("data/verbs.js");
 sandbox.Store.index();
@@ -142,6 +142,52 @@ searchCases.forEach(({ q, mora, neSme }) => {
   neSme.forEach((id) => {
     if (hits.includes(id)) problems.push(`pretraga "${q}" pogrešno vraća ${id} (poklapanje iz primera)`);
   });
+});
+
+// 5c. promene po licima, rodu i broju: svaka reč ili ima ispravnu tabelu ili je nema namerno
+const inflector = sandbox.Inflector;
+S.words.forEach((w) => {
+  if (w.pos === "verbo") {
+    const verb = sandbox.Store.verbFor(w);
+    if (!verb) {
+      problems.push(`glagol bez promene: ${w.id} (${w.es})`);
+      return;
+    }
+    verb.tenses.forEach((tense) => {
+      const forms = sandbox.Conjugator.conjugate(verb.infinitive, tense);
+      if (forms.length !== 6 || forms.some((f) => !f || /undefined/.test(f))) {
+        problems.push(`loši oblici: ${w.id} ${tense} → ${forms.join(", ")}`);
+      }
+      if (/se$/.test(verb.infinitive) && !/^(me|te|se|nos|os) /.test(forms[0])) {
+        problems.push(`povratni glagol bez zamenice: ${w.id} ${tense} → ${forms[0]}`);
+      }
+    });
+    return;
+  }
+
+  if (w.pos === "sustantivo") {
+    const noun = inflector.noun(w);
+    const excluded = Object.prototype.hasOwnProperty.call(inflector.exceptions, w.id);
+    if (!noun && !excluded) problems.push(`imenica bez množine: ${w.id} (${w.es})`);
+    if (noun && !noun.plural) problems.push(`imenica bez oblika množine: ${w.id}`);
+    // naglasak na poslednjem slogu mora da nestane: avión → aviones, delfín → delfines.
+    // Izuzetak je hijat (país → países), gde naglašenom samoglasniku prethodi samoglasnik.
+    if (noun && noun.plural && /[^aeiouáéíóú][áéíóú][ns]es\b/.test(noun.plural)) {
+      problems.push(`naglasak ostao u množini: ${w.id} → ${noun.plural}`);
+    }
+    return;
+  }
+
+  if (w.pos === "adjetivo") {
+    const adj = inflector.adjective(w);
+    if (!adj || (!adj.ms && !adj.fs)) problems.push(`pridev bez oblika: ${w.id} (${w.es})`);
+    return;
+  }
+
+  // prilozi i izrazi se ne menjaju — ne smeju da dobiju tabelu
+  if (w.pos === "adverbio" || w.pos === "expresión") {
+    if (sandbox.Store.verbFor(w)) problems.push(`nepromenljiva reč dobila konjugaciju: ${w.id}`);
+  }
 });
 
 // 6. verzija fajlova mora da odgovara sadržaju — inače je zaboravljen tools/manifest.py

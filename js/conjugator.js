@@ -8,6 +8,8 @@
   "use strict";
 
   var PERSONS = ["yo", "tú", "él/ella", "nosotros", "vosotros", "ellos/ellas"];
+  var REFLEXIVE = ["me", "te", "se", "nos", "os", "se"];
+  var INFINITIVE = /(a|e|i|á|é|í)r(se)?$/;
 
   var REGULAR = {
     presente: {
@@ -222,6 +224,13 @@
     detener: {
       presente: ["detengo", "detienes", "detiene", "detenemos", "detenéis", "detienen"],
       indefinido: ["detuve", "detuviste", "detuvo", "detuvimos", "detuvisteis", "detuvieron"]
+    },
+    diluir: {
+      presente: ["diluyo", "diluyes", "diluye", "diluimos", "diluís", "diluyen"],
+      indefinido: ["diluí", "diluiste", "diluyó", "diluimos", "diluisteis", "diluyeron"]
+    },
+    florecer: {
+      presente: ["florezco", "floreces", "florece", "florecemos", "florecéis", "florecen"]
     }
   };
 
@@ -252,7 +261,13 @@
 
   /** Vraća niz od šest oblika, po licima iz PERSONS. */
   function conjugate(infinitive, tense) {
-    var base = infinitive.replace(/se$/, ""); // reírse → reír
+    // povratni glagol dobija svoju zamenicu: quejarse → me quejo, te quejas…
+    if (/r se$/.test(infinitive.replace(/(se)$/, " $1"))) {
+      var plain = conjugate(infinitive.replace(/se$/, ""), tense);
+      return plain.map(function (form, i) { return REFLEXIVE[i] + " " + form; });
+    }
+
+    var base = infinitive;
     var irregular = IRREGULAR[base];
     if (irregular && irregular[tense]) return irregular[tense].slice();
 
@@ -287,6 +302,12 @@
     isIrregular: function (infinitive) {
       var base = infinitive.replace(/se$/, "");
       return Boolean(IRREGULAR[base] || FUTURE_STEMS[base] || IRREGULAR_PARTICIPLES[base]);
+    },
+    isReflexive: function (infinitive) { return /se$/.test(infinitive) && INFINITIVE.test(infinitive); },
+    /** Da li uopšte umemo da promenimo ovaj glagol (poznat nepravilan ili pravilan oblik). */
+    canConjugate: function (infinitive) {
+      var base = String(infinitive || "").replace(/se$/, "");
+      return INFINITIVE.test(base + "r") || /(ar|er|ir|ár|ér|ír)$/.test(base);
     }
   };
 

@@ -22,7 +22,7 @@
       mode: "srs"
     },
     quiz: null,
-    vocab: { search: "", sort: "alpha", topics: [], pos: "", lessons: [], openId: null }
+    vocab: { search: "", sort: "alpha", topics: [], pos: [], lessons: [], openId: null }
   };
 
   // ---------- pomoćne ----------
@@ -161,9 +161,9 @@
 
   // ---------- podešavanje kviza ----------
 
-  function chip(label, isOn, onToggle) {
+  function chip(label, isOn, onToggle, extra) {
     return el("label", {
-      class: "chip" + (isOn ? " on" : ""),
+      class: "chip" + (isOn ? " on" : "") + (extra ? " " + extra : ""),
       onclick: function (ev) { ev.preventDefault(); onToggle(); }
     }, [el("span", { class: "dot" }), label]);
   }
@@ -429,7 +429,7 @@
     var vocab = state.vocab;
 
     var words = global.Store.words.filter(function (w) {
-      if (vocab.pos && w.pos !== vocab.pos) return false;
+      if (vocab.pos.length && vocab.pos.indexOf(w.pos) === -1) return false;
       if (vocab.topics.length && vocab.topics.indexOf(w.topic.es) === -1) return false;
       if (vocab.lessons.length && !w.lessons.some(function (id) {
         return vocab.lessons.indexOf(id) !== -1;
@@ -454,6 +454,65 @@
     return words;
   }
 
+  /** Tabela promena za glagol, imenicu ili pridev; null ako je nemamo. */
+  function formsTable(word) {
+    var verb = global.Store.verbFor(word);
+    if (verb) {
+      var rows = global.Conjugator.PERSONS.map(function (person, i) {
+        return el("tr", {}, [el("th", { text: person })].concat(verb.tenses.map(function (tense) {
+          return el("td", { text: global.Conjugator.conjugate(verb.infinitive, tense)[i] });
+        })));
+      });
+      return {
+        label: t("showFormsVerb"),
+        node: el("div", { class: "forms-scroll" }, [
+          el("table", { class: "forms" }, [
+            el("thead", {}, [el("tr", {}, [el("th", {})].concat(verb.tenses.map(function (tense) {
+              return el("th", { text: t("tense")[tense] || tense });
+            })))]),
+            el("tbody", {}, rows)
+          ])
+        ])
+      };
+    }
+
+    if (word.pos === "sustantivo") {
+      var noun = global.Inflector.noun(word);
+      if (!noun) return null;
+      var nounRows = [];
+      if (noun.singular) nounRows.push([t("singular"), noun.singular]);
+      if (noun.plural) nounRows.push([t("plural"), noun.plural]);
+      if (!nounRows.length) return null;
+      return { label: t("showFormsNoun"), node: simpleTable(nounRows) };
+    }
+
+    if (word.pos === "adjetivo") {
+      var adj = global.Inflector.adjective(word);
+      if (!adj) return null;
+      var pairs = [
+        [t("masculine") + " · " + t("singular"), adj.ms],
+        [t("feminine") + " · " + t("singular"), adj.fs],
+        [t("masculine") + " · " + t("plural"), adj.mp],
+        [t("feminine") + " · " + t("plural"), adj.fp]
+      ].filter(function (pair) { return pair[1]; });
+      if (!pairs.length) return null;
+      return { label: t("showFormsAdj"), node: simpleTable(pairs) };
+    }
+
+    return null;
+  }
+
+  function simpleTable(pairs) {
+    return el("table", { class: "forms forms-simple" }, [
+      el("tbody", {}, pairs.map(function (pair) {
+        return el("tr", {}, [
+          el("th", { text: pair[0] }),
+          el("td", {}, [pair[1], " ", speakButton(pair[1])])
+        ]);
+      }))
+    ]);
+  }
+
   function wordCard(word, onToggle) {
     var posLabel = t("pos")[word.pos] || word.pos;
     var open = state.vocab.openId === word.id;
@@ -470,6 +529,24 @@
         : el("p", { class: "word-noex", text: t("noExample") })
     ]);
 
+    var forms = formsTable(word);
+    if (forms) {
+      var holder = el("div", { class: "forms-holder", hidden: "hidden" }, [forms.node]);
+      var toggle = el("button", {
+        class: "btn ghost small forms-toggle", type: "button", "aria-expanded": "false",
+        onclick: function (ev) {
+          ev.stopPropagation();
+          var shown = !holder.hasAttribute("hidden");
+          if (shown) holder.setAttribute("hidden", "hidden");
+          else holder.removeAttribute("hidden");
+          toggle.textContent = shown ? forms.label : t("hideForms");
+          toggle.setAttribute("aria-expanded", String(!shown));
+        }
+      }, [forms.label]);
+      body.appendChild(toggle);
+      body.appendChild(holder);
+    }
+
     var head = el("div", {
       class: "word-head",
       role: "button",
@@ -480,7 +557,7 @@
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onToggle(word.id); }
       }
     }, [
-      word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
+      el("span", { class: "word-art", text: word.article ? "(" + word.article + ")" : "" }),
       el("span", { class: "word-es", text: word.root }),
       speakButton(word.speakText),
       el("span", { class: "word-sr", text: word.sr }),
@@ -575,12 +652,22 @@
       })
     ]);
 
+    var posChips = el("div", { class: "pos-filter" }, ["sustantivo", "verbo", "adjetivo", "adverbio", "expresión"]
+      .map(function (pos) {
+        return chip(t("posPlural")[pos], vocab.pos.indexOf(pos) !== -1, function () {
+          var at = vocab.pos.indexOf(pos);
+          if (at === -1) vocab.pos.push(pos); else vocab.pos.splice(at, 1);
+          renderMain();
+        }, "small");
+      }));
+
     var toolbar = el("div", { class: "toolbar" }, [
       el("input", {
         class: "search", type: "search", placeholder: t("searchPlaceholder"), value: vocab.search,
         oninput: function (ev) { vocab.search = ev.target.value; update(); }
       }),
-      filters
+      filters,
+      posChips
     ]);
 
     update();

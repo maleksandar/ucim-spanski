@@ -6,6 +6,9 @@
   var rawVerbs = [];
 
   var ARTICLE = /^(el\/la|la\/el|el|la|los|las|un|una|unos|unas)\s+/i;
+  // ove "teme" samo ponavljaju vrstu reči, koja ima svoj filter — ne nude ništa novo
+  var POS_TOPICS = ["Verbos", "Adjetivos", "Expresiones"];
+  var INFINITIVE = /^([a-zá-úñ]+(?:ar|er|ir|ár|ér|ír)(?:se)?)/i;
   // sve što nije slovo ili cifra na početku (¡, ¿, navodnici…) ne sme u ključ za sortiranje
   var LEADING_JUNK = /^[^0-9A-Za-zÀ-ÖØ-öø-ÿ]+/;
 
@@ -141,7 +144,9 @@
 
       Store.words = Object.keys(wordMap).map(function (k) { return decorate(wordMap[k]); });
       Store.words.sort(function (a, b) { return a.sortKey.localeCompare(b.sortKey, "es"); });
-      Store.topics = Object.keys(topicSet).sort().map(function (k) { return topicSet[k]; });
+      Store.topics = Object.keys(topicSet).sort()
+        .filter(function (k) { return POS_TOPICS.indexOf(k) === -1; })
+        .map(function (k) { return topicSet[k]; });
 
       Store.verbs = rawVerbs.map(function (v) {
         var forms = {};
@@ -149,8 +154,27 @@
         return { inf: v.inf, sr: v.sr, tenses: v.tenses, forms: forms };
       });
 
+      Store.verbsByInfinitive = Object.create(null);
+      Store.verbs.forEach(function (v) { Store.verbsByInfinitive[v.inf] = v; });
+
       Store.byId = wordMap;
       return Store;
+    },
+
+    /**
+     * Za reč vrste "verbo" vrati infinitiv koji umemo da promenimo i vremena
+     * koja ima smisla pokazati. Povratni oblik se čuva ("quejarse", ne "quejar")
+     * da bi tabela imala zamenice.
+     */
+    verbFor: function (word) {
+      if (word.pos !== "verbo") return null;
+      var match = INFINITIVE.exec(word.root);
+      if (!match) return null;
+      var infinitive = match[1];
+      var entry = Store.verbsByInfinitive[infinitive] ||
+        Store.verbsByInfinitive[infinitive.replace(/se$/, "")];
+      if (!entry) return null;
+      return { infinitive: infinitive, tenses: entry.tenses };
     },
 
     /**
