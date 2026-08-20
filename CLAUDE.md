@@ -44,6 +44,8 @@ lesson({
     {
       id: "hace-falta",                // globalno jedinstven slug, bez dijakritika
       es: "hace falta",                // sa članom za imenice: "el techo"
+                                       // rečnik ga sam prikaže kao "(el) techo"
+                                       // i sortira pod T, a ne pod E
       sr: "potrebno je",
       def: "…",                        // opciono: špansko objašnjenje iz beleški
       pos: "sustantivo|verbo|adjetivo|adverbio|expresión",

@@ -54,6 +54,23 @@ Object.keys(bySr).forEach((k) => {
   if (bySr[k].length > 1) problems.push(`isti srpski prevod "${k}" za: ${bySr[k].join(", ")}`);
 });
 
+// 1c. ključ za sortiranje: bez člana, bez vodeće interpunkcije, i lista stvarno sortirana
+S.words.forEach((w) => {
+  if (!w.sortKey || !w.sortKey.trim()) problems.push(`prazan ključ za sortiranje: ${w.id}`);
+  if (/^[^0-9A-Za-zÀ-ÖØ-öø-ÿ]/.test(w.sortKey)) {
+    problems.push(`ključ počinje interpunkcijom: ${w.id} → ${JSON.stringify(w.sortKey)}`);
+  }
+  if (w.pos === "sustantivo" && /^(el|la|los|las|un|una|unos|unas)\s/i.test(w.sortKey)) {
+    problems.push(`član ostao u ključu: ${w.id} → ${JSON.stringify(w.sortKey)}`);
+  }
+});
+for (let i = 1; i < S.words.length; i++) {
+  if (S.words[i - 1].sortKey.localeCompare(S.words[i].sortKey, "es") > 0) {
+    problems.push(`redosled narušen: ${S.words[i - 1].es} pre ${S.words[i].es}`);
+    break;
+  }
+}
+
 // 2. gramatička pitanja: tačan odgovor mora biti među ponuđenim
 const seenQ = new Set();
 S.grammarQuestions.forEach((q) => {

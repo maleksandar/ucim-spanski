@@ -5,6 +5,34 @@
   var lessons = [];
   var rawVerbs = [];
 
+  var ARTICLE = /^(el\/la|la\/el|el|la|los|las|un|una|unos|unas)\s+/i;
+  // sve što nije slovo ili cifra na početku (¡, ¿, navodnici…) ne sme u ključ za sortiranje
+  var LEADING_JUNK = /^[^0-9A-Za-zÀ-ÖØ-öø-ÿ]+/;
+
+  /** Član se odvaja samo kod imenica; kod izraza je "una vez" deo samog izraza. */
+  function splitArticle(word) {
+    if (word.pos !== "sustantivo") return { article: "", rest: word.es };
+    var match = ARTICLE.exec(word.es);
+    if (!match) return { article: "", rest: word.es };
+    return { article: match[1], rest: word.es.slice(match[0].length) };
+  }
+
+  function firstAlternative(text) {
+    return text.split("/")[0].trim();
+  }
+
+  /** Dopunjuje reč poljima za prikaz, sortiranje i izgovor. */
+  function decorate(word) {
+    var parts = splitArticle(word);
+    word.article = parts.article;
+    word.root = parts.rest;
+    word.sortKey = parts.rest.replace(LEADING_JUNK, "");
+    word.speakText = parts.article
+      ? firstAlternative(parts.article) + " " + firstAlternative(parts.rest)
+      : firstAlternative(word.es);
+    return word;
+  }
+
   // data/lessons/*.js zovu lesson(), data/verbs.js zove verbs()
   global.lesson = function (data) { lessons.push(data); };
   global.verbs = function (list) { rawVerbs = list; };
@@ -109,8 +137,8 @@
         });
       });
 
-      Store.words = Object.keys(wordMap).map(function (k) { return wordMap[k]; });
-      Store.words.sort(function (a, b) { return a.es.localeCompare(b.es, "es"); });
+      Store.words = Object.keys(wordMap).map(function (k) { return decorate(wordMap[k]); });
+      Store.words.sort(function (a, b) { return a.sortKey.localeCompare(b.sortKey, "es"); });
       Store.topics = Object.keys(topicSet).sort().map(function (k) { return topicSet[k]; });
 
       Store.verbs = rawVerbs.map(function (v) {

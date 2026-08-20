@@ -573,6 +573,7 @@ select.wide {
   padding: .75rem .9rem;
 }
 .word-head { display: flex; align-items: baseline; gap: .55rem; flex-wrap: wrap; }
+.word-art { color: var(--muted); font-size: .9rem; }
 .word-es { font-weight: 650; font-size: 1.05rem; }
 .word-sr { color: var(--muted); }
 .word-sr::before { content: "· "; }

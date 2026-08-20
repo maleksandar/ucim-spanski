@@ -443,15 +443,18 @@
       return global.Dropdown.fold(haystack).indexOf(query) !== -1;
     });
 
+    // uvek po korenu reči: ni član ni vodeća interpunkcija ne pomeraju redosled
+    function byRoot(a, b) { return a.sortKey.localeCompare(b.sortKey, "es"); }
+
     if (vocab.sort === "alpha") {
-      words.sort(function (a, b) { return a.es.localeCompare(b.es, "es"); });
+      words.sort(byRoot);
     } else if (vocab.sort === "topic") {
       words.sort(function (a, b) {
-        return pick(a.topic).localeCompare(pick(b.topic)) || a.es.localeCompare(b.es, "es");
+        return pick(a.topic).localeCompare(pick(b.topic)) || byRoot(a, b);
       });
     } else {
       words.sort(function (a, b) {
-        return a.lessons[0].localeCompare(b.lessons[0]) || a.es.localeCompare(b.es, "es");
+        return a.lessons[0].localeCompare(b.lessons[0]) || byRoot(a, b);
       });
     }
     return words;
@@ -461,8 +464,9 @@
     var posLabel = t("pos")[word.pos] || word.pos;
     return el("div", { class: "word" }, [
       el("div", { class: "word-head" }, [
-        el("span", { class: "word-es", text: word.es }),
-        speakButton(word.es.replace(/^el\/la\s+/, "").split("/")[0].trim()),
+        word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
+        el("span", { class: "word-es", text: word.root }),
+        speakButton(word.speakText),
         el("span", { class: "word-sr", text: word.sr }),
         el("span", { class: "tag", text: posLabel })
       ]),
