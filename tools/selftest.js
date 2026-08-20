@@ -23,7 +23,7 @@ function run(rel) {
   vm.runInContext(fs.readFileSync(path.join(repo, rel), "utf8"), sandbox, { filename: rel });
 }
 
-["js/i18n.js", "js/conjugator.js", "js/store.js", "js/srs.js", "js/quiz.js", "data/manifest.js"].forEach(run);
+["js/text.js", "js/i18n.js", "js/conjugator.js", "js/store.js", "js/srs.js", "js/quiz.js", "data/manifest.js"].forEach(run);
 sandbox.LESSON_FILES.forEach((f) => run("data/" + f));
 run("data/verbs.js");
 sandbox.Store.index();
@@ -124,6 +124,25 @@ console.log("SRS:", JSON.stringify(sandbox.SRS.stats(ids)));
 console.log(`\nlekcija: ${S.lessons.length}  reči: ${S.words.length}  gram. tema: ${S.grammar.length}  ` +
   `gram. pitanja: ${S.grammarQuestions.length}  glagola: ${S.verbs.length}`);
 console.log(`reči spremnih za "popuni prazninu": ${clozeReady.length} / ${S.words.length}`);
+
+// 5b. pretraga gleda reč, oblike i prevod — nikad primere
+const nadji = (q) => S.words.filter((w) => sandbox.Store.matchesSearch(w, q)).map((w) => w.id);
+const searchCases = [
+  { q: "algun", mora: ["algunas-veces", "alguna-vez", "algun-dia", "algunos-dias"], neSme: ["bosque"] },
+  { q: "mesa", mora: ["juego-de-mesa"], neSme: ["ajedrez"] },            // "juego de mesa" je u primeru za ajedrez
+  { q: "krov", mora: ["techo"], neSme: [] },                            // srpski prevod
+  { q: "arboles", mora: ["arbol"], neSme: [] },                         // oblik reči, bez dijakritike
+  { q: "granada", mora: [], neSme: ["tapa", "jardin", "mirador"] }      // Granada se javlja samo u primerima
+];
+searchCases.forEach(({ q, mora, neSme }) => {
+  const hits = nadji(q);
+  mora.forEach((id) => {
+    if (!hits.includes(id)) problems.push(`pretraga "${q}" ne nalazi ${id}`);
+  });
+  neSme.forEach((id) => {
+    if (hits.includes(id)) problems.push(`pretraga "${q}" pogrešno vraća ${id} (poklapanje iz primera)`);
+  });
+});
 
 // 6. verzija fajlova mora da odgovara sadržaju — inače je zaboravljen tools/manifest.py
 const versioned = ["css/style.css"]

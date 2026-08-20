@@ -430,17 +430,12 @@
 
   function filterWords() {
     var vocab = state.vocab;
-    var query = global.Dropdown.fold(vocab.search.trim());
 
     var words = global.Store.words.filter(function (w) {
       if (vocab.pos && w.pos !== vocab.pos) return false;
       if (vocab.topic && w.topic.es !== vocab.topic) return false;
       if (vocab.lesson && w.lessons.indexOf(vocab.lesson) === -1) return false;
-      if (!query) return true;
-      var haystack = [w.es, w.sr, w.def]
-        .concat(w.ex.map(function (e) { return e.es + " " + e.sr; }))
-        .join(" ");
-      return global.Dropdown.fold(haystack).indexOf(query) !== -1;
+      return global.Store.matchesSearch(w, vocab.search);
     });
 
     // uvek po korenu reči: ni član ni vodeća interpunkcija ne pomeraju redosled

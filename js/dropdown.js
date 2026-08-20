@@ -5,14 +5,7 @@
 
   var openInstance = null;
 
-  /** Za pretragu bez obzira na dijakritike: "sección" nađe "seccion", "čaj" nađe "caj". */
-  function fold(text) {
-    return String(text)
-      .toLowerCase()
-      .replace(/đ/g, "d")
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "");
-  }
+  var fold = global.TextUtil.fold;
 
   function el(tag, attrs, children) {
     var node = document.createElement(tag);
@@ -212,5 +205,5 @@
     if (ev.key === "Escape" && openInstance) openInstance.close();
   });
 
-  global.Dropdown = { create: create, fold: fold };
+  global.Dropdown = { create: create };
 })(window);

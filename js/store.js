@@ -153,6 +153,18 @@
       return Store;
     },
 
+    /**
+     * Pretraga gleda reč, njene oblike i srpski prevod — ali ne i primere.
+     * Inače bi "algun" izlistao i bosque, zato što mu je u primeru
+     * "Algunas personas van a plantar árboles…".
+     */
+    matchesSearch: function (word, query) {
+      var needle = global.TextUtil.fold(String(query || "").trim());
+      if (!needle) return true;
+      var haystack = [word.es, word.sr].concat(word.forms).join(" ");
+      return global.TextUtil.fold(haystack).indexOf(needle) !== -1;
+    },
+
     lessonById: function (id) {
       for (var i = 0; i < Store.lessons.length; i++) {
         if (Store.lessons[i].id === id) return Store.lessons[i];
