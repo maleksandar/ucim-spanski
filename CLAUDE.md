@@ -12,12 +12,20 @@ python3 tools/extract.py
 ```
 
 Skripta skenira Drive folder iz `tools/config.json`, prepoznaje nove i izmenjene
-fajlove po sha256 hešu, i izvlači tekst u `staging/`. Fajlove bez tekstualnog
-sloja (skenirani PDF, slajdovi od slika) markira sa `PAZNJA` u zaglavlju i
-ispisuje ih pod „Zahtevaju rucno citanje" — te čitaj direktno Read alatom
-(PDF podržava `pages` parametar, do 20 strana po pozivu).
+fajlove po sha256 hešu, i izvlači tekst u `staging/`. Čita ODT, DOCX, PPTX i PDF
+(PDF preko `pdftotext` iz poppler-a; ako ga nema, pokušava PyMuPDF pa pdfminer).
+
+Fajl bez tekstualnog sloja — skeniran PDF ili slajdovi od slika — dobija `PAZNJA`
+u zaglavlju i pojavljuje se pod „Zahtevaju rucno citanje". Takav čitaj direktno
+Read alatom; on renderuje strane kao slike i traži `pdftoppm`, takođe iz poppler-a
+(`brew install poppler`).
 
 Ako skripta ne prijavi ništa novo, posao je gotov.
+
+**Već pokriveno, ne pravi ponovo:** `9.7 Notas.pdf` je isti sadržaj kao
+`9.7 Notas.odt` (lekcija `2026-07-09`), a `23.07 reporte (1).odt` je identična
+kopija `23.07 reporte.odt` (lekcija `2026-07-23-reporte`). Skripta ih izvlači jer
+su zasebni fajlovi, ali lekcije za njih već postoje.
 
 ### 2. Napravi lekciju
 
@@ -70,6 +78,10 @@ Pravila koja test proverava:
   Ako se ista reč pojavi u dve lekcije, koristi **isti** `id` — `store.js` će
   spojiti primere i zapamtiti obe lekcije. Tako SRS prati jednu reč, a ne dve.
 - Svaka reč ima bar jedan primer, i svaki primer ima srpski prevod.
+- Dve reči ne smeju imati **isti srpski prevod** ni **isti španski izraz** —
+  inače pitanje o prevodu dobija dva tačna odgovora. Ako su značenja stvarno
+  bliska, razdvoj ih (`sudija, žiri` naspram `sudija (u sportu)`) ili ih spoji
+  pod jedan `id`.
 - `answer` mora biti među `options`, opcije se ne ponavljaju, ima ih bar 2.
 - Tačan odgovor se ne sme već videti kao zasebna reč u samoj rečenici.
 - `explain` ima i `es` i `sr`.

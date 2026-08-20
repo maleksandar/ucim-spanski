@@ -39,6 +39,21 @@ S.words.forEach((w) => {
   w.ex.forEach((ex) => { if (!ex.sr) problems.push(`primer bez prevoda: ${w.id} — ${ex.es}`); });
 });
 
+// 1b. dve reči sa istim prevodom napravile bi pitanje sa dva tačna odgovora
+const stripArticle = (t) => t.toLowerCase().replace(/^(el\/la|el|la|los|las)\s+/, "").trim();
+const byEs = {};
+const bySr = {};
+S.words.forEach((w) => {
+  (byEs[stripArticle(w.es)] = byEs[stripArticle(w.es)] || []).push(w.id);
+  (bySr[w.sr.toLowerCase()] = bySr[w.sr.toLowerCase()] || []).push(w.id);
+});
+Object.keys(byEs).forEach((k) => {
+  if (byEs[k].length > 1) problems.push(`isti španski izraz "${k}" pod id: ${byEs[k].join(", ")}`);
+});
+Object.keys(bySr).forEach((k) => {
+  if (bySr[k].length > 1) problems.push(`isti srpski prevod "${k}" za: ${bySr[k].join(", ")}`);
+});
+
 // 2. gramatička pitanja: tačan odgovor mora biti među ponuđenim
 const seenQ = new Set();
 S.grammarQuestions.forEach((q) => {

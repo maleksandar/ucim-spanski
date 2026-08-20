@@ -18,6 +18,8 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 import sys
 import unicodedata
 import zipfile
@@ -111,7 +113,21 @@ def extract_pptx(path: Path) -> str:
 
 
 def extract_pdf(path: Path) -> str:
-    """Radi samo ako je instalirana neka PDF biblioteka; inace prazno."""
+    """Redom: pdftotext iz poppler-a, pa PyMuPDF, pa pdfminer. Prazno ako nema nijednog."""
+    if shutil.which("pdftotext"):
+        result = subprocess.run(
+            ["pdftotext", "-layout", str(path), "-"],
+            capture_output=True, text=True, check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            # pdftotext razdvaja strane form feed znakom
+            pages = result.stdout.split("\f")
+            return "\n\n".join(
+                f"--- Strana {i + 1} ---\n{page.strip()}"
+                for i, page in enumerate(pages)
+                if page.strip()
+            )
+
     try:
         import fitz  # PyMuPDF
     except ImportError:

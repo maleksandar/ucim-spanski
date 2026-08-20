@@ -3,139 +3,139 @@
     "22.7 Notas.odt": {
       "sha256": "bc4805f1bbbe48cc08b94e445c27b253b9055a8dadb5def3c4097c82132a7514",
       "staging": "22-7-notas.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 1663,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "23.07 Naturaleza estudiantes.odt": {
       "sha256": "dcf59942fc6d20cff71af1620eec09e6310902fd551e19fdd81726dd3cea09b9",
       "staging": "23-07-naturaleza-estudiantes.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 2302,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "23.07 reporte (1).odt": {
       "sha256": "7f748af5844939194d1375ec06ef5ecd948a796a92a33cecbdcc355a3fc5297d",
       "staging": "23-07-reporte-1.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3722,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "23.07 reporte.odt": {
       "sha256": "7f748af5844939194d1375ec06ef5ecd948a796a92a33cecbdcc355a3fc5297d",
       "staging": "23-07-reporte.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3722,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "29.07 notas.odt": {
       "sha256": "9f55c68d5a84b755fd60fe54ef68da4e6ed48c8d4d095e32b140401709aa579f",
       "staging": "29-07-notas.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3570,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "29.7 estudiantes.odt": {
       "sha256": "ab5422f29be1adf2326410cda18bc6c71f9eb657a708fd2c3e703d596b81fb3d",
       "staging": "29-7-estudiantes.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 5775,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "30.07 notas.odt": {
       "sha256": "9a3a17880ae8db6c19037d0f3f3de504a71ceb3e05ac73e46f8c7da833cc940f",
       "staging": "30-07-notas.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3587,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "4. ¿Has visitado España.pdf": {
       "sha256": "d47b53749a62ceb62507f6b1f20738d78fd418380f8a4bdbe24d79138aac09a8",
       "staging": "4-has-visitado-espana.pdf.txt",
-      "status": "new",
-      "needs_review": true,
-      "chars": 0,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "status": "changed",
+      "needs_review": false,
+      "chars": 8341,
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "5. Vocabulario del aeropuerto.pdf": {
       "sha256": "59201bdff8271c905ca2c1cb9f32f4292775699e8e028a65f001a87116d07b5e",
       "staging": "5-vocabulario-del-aeropuerto.pdf.txt",
-      "status": "new",
-      "needs_review": true,
-      "chars": 0,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "status": "changed",
+      "needs_review": false,
+      "chars": 8558,
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "9. ¿Te conté la última anécdota.pdf": {
       "sha256": "06844c3c1856a5a747348b1e928dd23e80fc8cf2e03b1a3138ea2b5bbc4e8fe8",
       "staging": "9-te-conte-la-ultima-anecdota.pdf.txt",
-      "status": "new",
-      "needs_review": true,
-      "chars": 0,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "status": "changed",
+      "needs_review": false,
+      "chars": 13298,
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "9.7 Notas.odt": {
       "sha256": "bace3bc5b7755486836c85da42245ea42604a316a8a8597759c5968dfef1e0ac",
       "staging": "9-7-notas.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 1514,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "9.7 Notas.pdf": {
       "sha256": "e4ce86370b68a6ac2394c667ad2b6392a56887187681dee24a3666af1238fc3c",
       "staging": "9-7-notas.pdf.txt",
-      "status": "new",
-      "needs_review": true,
-      "chars": 0,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "status": "changed",
+      "needs_review": false,
+      "chars": 1714,
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "MUCHO_BIEN_.pptx": {
       "sha256": "03d84a89612cf4bebe062ad6e546a802e75d758f64c39ad6fb33210e4a829c82",
       "staging": "mucho-bien.pptx.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 4508,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "Notas 27.7.odt": {
       "sha256": "8a098fbd0167233148cb2ce566fffb287ab81102973bb403970da752ba7b3f33",
       "staging": "notas-27-7.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3294,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "notas 3.8.odt": {
       "sha256": "d6401bb3ebfce628ce468939b65ae479937de7c6385c875321db6ab74c1cd89c",
       "staging": "notas-3-8.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 3737,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "notas 5.08.odt": {
       "sha256": "68ec2fa4dcebf144f2a4cc872587623c90d18f951e2b9d046fe25a46daccaa77",
       "staging": "notas-5-08.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 2825,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     },
     "notas 6.08.odt": {
       "sha256": "6107f5d5f52d671cc0b949862f9c4c45e47fd4bfa8d4315c6ebe69dc6ccabaec",
       "staging": "notas-6-08.odt.txt",
-      "status": "new",
+      "status": "changed",
       "needs_review": false,
       "chars": 4024,
-      "extracted_at": "2026-08-20T11:30:25+00:00"
+      "extracted_at": "2026-08-20T12:07:44+00:00"
     }
   },
-  "last_run": "2026-08-20T11:30:25+00:00"
+  "last_run": "2026-08-20T12:07:44+00:00"
 }

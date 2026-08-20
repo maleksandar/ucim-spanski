@@ -34,13 +34,15 @@
     tener: "tendr", poder: "podr", poner: "pondr", venir: "vendr", salir: "saldr",
     saber: "sabr", querer: "querr", hacer: "har", decir: "dir", haber: "habr",
     mantener: "mantendr", prevenir: "prevendr", convenir: "convendr",
+    detener: "detendr", posponer: "pospondr",
     "reír": "reir"
   };
 
   var IRREGULAR_PARTICIPLES = {
     hacer: "hecho", decir: "dicho", ver: "visto", poner: "puesto", volver: "vuelto",
     escribir: "escrito", abrir: "abierto", descubrir: "descubierto", romper: "roto",
-    morir: "muerto", cubrir: "cubierto", resolver: "resuelto", devolver: "devuelto"
+    morir: "muerto", cubrir: "cubierto", resolver: "resuelto", devolver: "devuelto",
+    posponer: "pospuesto"
   };
 
   // [yo, tú, él/ella, nosotros, vosotros, ellos/ellas]
@@ -195,6 +197,31 @@
     reír: {
       presente: ["río", "ríes", "ríe", "reímos", "reís", "ríen"],
       indefinido: ["reí", "reíste", "rio", "reímos", "reísteis", "rieron"]
+    },
+    andar: {
+      indefinido: ["anduve", "anduviste", "anduvo", "anduvimos", "anduvisteis", "anduvieron"]
+    },
+    sonar: {
+      presente: ["sueno", "suenas", "suena", "sonamos", "sonáis", "suenan"]
+    },
+    vestir: {
+      presente: ["visto", "vistes", "viste", "vestimos", "vestís", "visten"],
+      indefinido: ["vestí", "vestiste", "vistió", "vestimos", "vestisteis", "vistieron"]
+    },
+    posponer: {
+      presente: ["pospongo", "pospones", "pospone", "posponemos", "posponéis", "posponen"],
+      indefinido: ["pospuse", "pospusiste", "pospuso", "pospusimos", "pospusisteis", "pospusieron"]
+    },
+    contribuir: {
+      presente: ["contribuyo", "contribuyes", "contribuye", "contribuimos", "contribuís", "contribuyen"],
+      indefinido: ["contribuí", "contribuiste", "contribuyó", "contribuimos", "contribuisteis", "contribuyeron"]
+    },
+    concertar: {
+      presente: ["concierto", "conciertas", "concierta", "concertamos", "concertáis", "conciertan"]
+    },
+    detener: {
+      presente: ["detengo", "detienes", "detiene", "detenemos", "detenéis", "detienen"],
+      indefinido: ["detuve", "detuviste", "detuvo", "detuvimos", "detuvisteis", "detuvieron"]
     }
   };
 

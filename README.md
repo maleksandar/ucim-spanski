@@ -40,6 +40,9 @@ staging/*.txt         izvučen tekst, ulaz za nedeljnu sesiju
 
 ## Nedeljni ritual
 
+Za PDF materijale treba poppler (`brew install poppler`): `pdftotext` za
+izvlačenje teksta, `pdftoppm` za PDF-ove koje treba čitati kao slike.
+
 ```bash
 python3 tools/extract.py     # nađi nove materijale u Drive folderu
 # → pokreni sesiju sa Claude-om (vidi CLAUDE.md)
