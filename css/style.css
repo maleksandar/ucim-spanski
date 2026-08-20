@@ -52,7 +52,16 @@ body {
 }
 
 button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
+
+button,
+select,
+summary,
+a[href],
+label.chip,
+[role="button"] { cursor: pointer; }
+
+button:disabled,
+[aria-disabled="true"] { cursor: default; }
 
 /* ---------- zaglavlje ---------- */
 
@@ -394,7 +403,7 @@ select.wide {
   top: var(--header-h);
   z-index: 15;
   display: grid;
-  gap: .5rem;
+  gap: .75rem;
   margin: 0 -1rem;
   padding: .7rem 1rem;
   background: var(--bg);
@@ -429,34 +438,45 @@ select.wide {
 /* ---------- padajuća lista sa pretragom ---------- */
 
 .dd { position: relative; min-width: 0; }
+.toolbar-filters .dd { min-width: 0; }
+@media (min-width: 620px) {
+  .toolbar-filters .dd { min-width: 10.5rem; }
+}
 
 .dd-toggle {
-  display: flex;
-  align-items: baseline;
-  gap: .4rem;
+  position: relative;
+  display: block;
   width: 100%;
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: 10px;
-  padding: .55rem 2.2rem .55rem .7rem;
+  /* labela sedi na samom borderu, pa je vrednost centrirana u punoj visini */
+  padding: .7rem 2.4rem;
   font-size: .88rem;
-  text-align: left;
+  text-align: center;
 }
 .dd-toggle:hover { border-color: var(--accent); }
 .dd[data-open="true"] .dd-toggle { border-color: var(--accent); }
 
 .dd-name {
-  flex: none;
-  font-size: .7rem;
+  position: absolute;
+  top: 0;
+  left: .6rem;
+  transform: translateY(-50%);
+  padding: 0 .35rem;
+  background: var(--surface);
+  font-size: .66rem;
   text-transform: uppercase;
   letter-spacing: .07em;
   font-weight: 700;
   color: var(--muted);
+  pointer-events: none;
 }
-.dd-name:empty { display: none; }
+.dd[data-open="true"] .dd-name,
+.dd[data-dirty="true"] .dd-name { color: var(--accent); }
 
 .dd-value {
-  flex: 1;
+  display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -466,10 +486,10 @@ select.wide {
 
 .dd-caret {
   position: absolute;
-  right: .75rem;
+  right: .7rem;
   top: 50%;
-  width: 0; height: 0;
   margin-top: -2px;
+  width: 0; height: 0;
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 5px solid var(--muted);

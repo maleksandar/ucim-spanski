@@ -49,6 +49,8 @@
     var activeIndex = -1;
     var visible = config.options.slice();
 
+    var optionNodes = Object.create(null);
+
     var root = el("div", { class: "dd" });
     var toggle = el("button", {
       class: "dd-toggle", type: "button",
@@ -116,13 +118,14 @@
         : config.options.slice();
 
       list.innerHTML = "";
+      optionNodes = Object.create(null);
       if (!visible.length) {
         list.appendChild(el("li", { class: "dd-empty", text: config.emptyLabel || "—" }));
         return;
       }
       visible.forEach(function (option, index) {
         var selected = isSelected(option.value);
-        list.appendChild(el("li", {
+        optionNodes[option.value] = el("li", {
           class: "dd-option" + (selected ? " on" : "") + (index === activeIndex ? " active" : ""),
           role: "option", "aria-selected": String(selected),
           onmousedown: function (ev) { ev.preventDefault(); },
@@ -130,8 +133,18 @@
         }, [
           el("span", { class: "dd-mark", "aria-hidden": "true" }),
           el("span", { text: option.label })
-        ]));
+        ]);
+        list.appendChild(optionNodes[option.value]);
       });
+    }
+
+    /** Osveži samo jednu opciju — ponovno crtanje liste bi vratilo skrol na vrh. */
+    function markSelected(optionValue) {
+      var node = optionNodes[optionValue];
+      if (!node) return;
+      var selected = isSelected(optionValue);
+      node.classList.toggle("on", selected);
+      node.setAttribute("aria-selected", String(selected));
     }
 
     function choose(optionValue) {
@@ -141,7 +154,7 @@
         if (at === -1) next.push(optionValue);
         else next.splice(at, 1);
         setValue(next, true);
-        renderList();
+        markSelected(optionValue);
       } else {
         setValue(optionValue, true);
         close();

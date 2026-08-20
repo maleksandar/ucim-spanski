@@ -22,7 +22,7 @@
       mode: "srs"
     },
     quiz: null,
-    vocab: { search: "", sort: "alpha", topic: "", pos: "", lesson: "", openId: null }
+    vocab: { search: "", sort: "alpha", topics: [], pos: "", lessons: [], openId: null }
   };
 
   // ---------- pomoćne ----------
@@ -190,7 +190,7 @@
 
     var lessonPicker = global.Dropdown.create({
       multiple: true,
-      label: "",
+      label: t("quizSource"),
       placeholder: t("allLessons"),
       options: lessonOptions(),
       value: state.prefs.lessons.slice(),
@@ -202,10 +202,7 @@
       onChange: function (chosen) { state.prefs.lessons = chosen; savePrefs(); }
     });
 
-    var lessonField = el("div", { class: "field" }, [
-      el("label", { class: "head", text: t("quizSource") }),
-      lessonPicker.node
-    ]);
+    var lessonField = el("div", { class: "field" }, [lessonPicker.node]);
 
     var modeField = el("div", { class: "field" }, [
       el("label", { class: "head", text: t("mode") }),
@@ -433,8 +430,10 @@
 
     var words = global.Store.words.filter(function (w) {
       if (vocab.pos && w.pos !== vocab.pos) return false;
-      if (vocab.topic && w.topic.es !== vocab.topic) return false;
-      if (vocab.lesson && w.lessons.indexOf(vocab.lesson) === -1) return false;
+      if (vocab.topics.length && vocab.topics.indexOf(w.topic.es) === -1) return false;
+      if (vocab.lessons.length && !w.lessons.some(function (id) {
+        return vocab.lessons.indexOf(id) !== -1;
+      })) return false;
       return global.Store.matchesSearch(w, vocab.search);
     });
 
@@ -550,16 +549,20 @@
 
     var filters = el("div", { class: "toolbar-filters" }, [
       picker({
-        label: t("filterTopic"), placeholder: t("all"), value: vocab.topic, defaultValue: "",
-        options: [{ value: "", label: t("all") }].concat(global.Store.topics.map(function (topic) {
+        label: t("filterTopic"), placeholder: t("all"), multiple: true,
+        value: vocab.topics.slice(), defaultValue: [],
+        options: global.Store.topics.map(function (topic) {
           return { value: topic.es, label: pick(topic) };
-        })),
-        onChange: function (chosen) { vocab.topic = chosen; update(); }
+        }),
+        countLabel: function (n) { return global.I18n.topicsCount(n); },
+        onChange: function (chosen) { vocab.topics = chosen; update(); }
       }),
       picker({
-        label: t("filterLesson"), placeholder: t("all"), value: vocab.lesson, defaultValue: "",
-        options: [{ value: "", label: t("all") }].concat(lessonOptions()),
-        onChange: function (chosen) { vocab.lesson = chosen; update(); }
+        label: t("filterLesson"), placeholder: t("all"), multiple: true,
+        value: vocab.lessons.slice(), defaultValue: [],
+        options: lessonOptions(),
+        countLabel: function (n) { return global.I18n.lessonsCount(n); },
+        onChange: function (chosen) { vocab.lessons = chosen; update(); }
       }),
       picker({
         label: t("sortBy"), value: vocab.sort, defaultValue: "alpha",
