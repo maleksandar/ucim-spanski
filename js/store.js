@@ -10,11 +10,11 @@
   global.verbs = function (list) { rawVerbs = list; };
 
   function loadScript(src) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       var el = document.createElement("script");
       el.src = src;
-      el.onload = resolve;
-      el.onerror = function () { reject(new Error("Ne mogu da učitam " + src)); };
+      el.onload = function () { resolve(true); };
+      el.onerror = function () { resolve(false); };
       document.head.appendChild(el);
     });
   }
@@ -28,12 +28,23 @@
     topics: [],
     byId: {},
 
+    failed: [],
+
     load: function () {
       var files = (global.LESSON_FILES || []).map(function (f) { return "data/" + f; });
       files.push("data/verbs.js");
+      // jedan lekcijski fajl koji ne stigne ne sme da obori ceo sajt
       return files.reduce(function (chain, src) {
-        return chain.then(function () { return loadScript(src); });
-      }, Promise.resolve()).then(function () { Store.index(); return Store; });
+        return chain.then(function () {
+          return loadScript(src).then(function (ok) {
+            if (!ok) Store.failed.push(src);
+          });
+        });
+      }, Promise.resolve()).then(function () {
+        if (!lessons.length) throw new Error("nijedna lekcija nije učitana");
+        Store.index();
+        return Store;
+      });
     },
 
     index: function () {

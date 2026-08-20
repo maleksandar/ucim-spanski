@@ -656,6 +656,9 @@
     loadPrefs();
 
     global.Store.load().then(function () {
+      if (global.Store.failed.length) {
+        console.warn("Nisu učitane lekcije:", global.Store.failed.join(", "));
+      }
       document.addEventListener("keydown", onKey);
       if (global.speechSynthesis) {
         global.speechSynthesis.onvoiceschanged = function () { voice = null; };
