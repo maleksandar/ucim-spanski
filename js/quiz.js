@@ -1,4 +1,5 @@
-/* Sastavljanje kviza iz baze: pet tipova pitanja, SRS ili nasumičan izbor. */
+/* Sastavljanje kviza iz baze: osam tipova pitanja (sa ponuđenim odgovorima i
+ * sa dopisivanjem), SRS ili nasumičan izbor. */
 (function (global) {
   "use strict";
 
@@ -86,7 +87,8 @@
     };
   }
 
-  function buildCloze(word, words) {
+  /** Nasumičan primer u kome se reč zaista pojavljuje, sa mestom za prazninu. */
+  function clozeSpot(word) {
     var forms = surfaceForms(word);
     if (!forms.length) return null;
     var usable = [];
@@ -95,11 +97,19 @@
       if (hit) usable.push({ ex: ex, hit: hit });
     });
     if (!usable.length) return null;
+    return usable[Math.floor(Math.random() * usable.length)];
+  }
 
-    var chosen = usable[Math.floor(Math.random() * usable.length)];
+  function blankOut(sentence, hit) {
+    return sentence.slice(0, hit.start) + "_____" + sentence.slice(hit.start + hit.length);
+  }
+
+  function buildCloze(word, words) {
+    var chosen = clozeSpot(word);
+    if (!chosen) return null;
     var sentence = chosen.ex.es;
     var hit = chosen.hit;
-    var blanked = sentence.slice(0, hit.start) + "_____" + sentence.slice(hit.start + hit.length);
+    var blanked = blankOut(sentence, hit);
     var answer = hit.surface;
 
     var pool = [];
@@ -190,6 +200,89 @@
     };
   }
 
+  // ---------- pitanja koja se dopisuju (bez ponuđenih odgovora) ----------
+
+  /** Oblici koje primamo kao tačan upis: i sa članom i bez njega, i alternative. */
+  function accepted(word) {
+    var out = [];
+    function add(value) {
+      var clean = String(value || "").trim();
+      if (clean && out.indexOf(clean) === -1) out.push(clean);
+    }
+    add(word.es);
+    add(stripArticle(word.es));
+    word.es.split("/").forEach(function (part) {
+      add(part);
+      add(stripArticle(part));
+    });
+    return out;
+  }
+
+  function buildWriteTranslation(word) {
+    return {
+      srsId: word.id,
+      type: "write-es",
+      prompt: word.sr,
+      sub: "",
+      input: true,
+      accept: accepted(word),
+      answer: word.es,
+      example: word.ex[0] || null,
+      lesson: word.lessons[0],
+      word: word
+    };
+  }
+
+  function buildWriteCloze(word) {
+    var chosen = clozeSpot(word);
+    if (!chosen) return null;
+    var sentence = chosen.ex.es;
+    return {
+      srsId: word.id,
+      type: "write-cloze",
+      prompt: blankOut(sentence, chosen.hit),
+      sub: word.sr,
+      input: true,
+      accept: [chosen.hit.surface],
+      answer: chosen.hit.surface,
+      example: { es: sentence, sr: chosen.ex.sr },
+      lesson: word.lessons[0],
+      word: word
+    };
+  }
+
+  function buildWriteConjugation(verb, tense) {
+    var forms = verb.forms[tense];
+    var index = Math.floor(Math.random() * forms.length);
+    return {
+      srsId: "c:" + verb.inf + ":" + tense,
+      type: "write-conjug",
+      prompt: verb.inf,
+      sub: verb.sr,
+      person: global.Conjugator.PERSONS[index],
+      tense: tense,
+      input: true,
+      accept: [forms[index]],
+      answer: forms[index],
+      lesson: null,
+      verb: verb
+    };
+  }
+
+  /**
+   * Poredi upisan odgovor sa prihvaćenim oblicima: akcenti, velika slova i
+   * interpunkcija se zanemaruju. Vraća oblik koji se poklopio, ili false.
+   */
+  function checkAnswer(question, typed) {
+    var value = global.TextUtil.normalizeAnswer(typed);
+    if (!value) return false;
+    var list = question.accept || [question.answer];
+    for (var i = 0; i < list.length; i++) {
+      if (global.TextUtil.normalizeAnswer(list[i]) === value) return list[i];
+    }
+    return false;
+  }
+
   /** Sve moguće pitanje-kandidate za date filtere. */
   function pool(options) {
     var types = options.types;
@@ -218,19 +311,30 @@
         }
       });
     }
+    if (types.indexOf("write-es") !== -1) {
+      words.forEach(function (w) { out.push({ kind: "write-es", word: w, srsId: w.id }); });
+    }
+    if (types.indexOf("write-cloze") !== -1) {
+      words.forEach(function (w) {
+        if (w.ex.length && findInSentence(w.ex[0].es, surfaceForms(w))) {
+          out.push({ kind: "write-cloze", word: w, srsId: w.id });
+        }
+      });
+    }
     if (types.indexOf("grammar") !== -1) {
       global.Store.grammarQuestions.forEach(function (q) {
         if (lessonAllowed(q.lesson)) out.push({ kind: "grammar", question: q, srsId: "g:" + q.id });
       });
     }
-    if (types.indexOf("conjug") !== -1) {
+    ["conjug", "write-conjug"].forEach(function (kind) {
+      if (types.indexOf(kind) === -1) return;
       // jedan kandidat po glagolu i vremenu, da SRS ključ odgovara onome što se beleži
       global.Store.verbs.forEach(function (v) {
         v.tenses.forEach(function (tense) {
-          out.push({ kind: "conjug", verb: v, tense: tense, srsId: "c:" + v.inf + ":" + tense });
+          out.push({ kind: kind, verb: v, tense: tense, srsId: "c:" + v.inf + ":" + tense });
         });
       });
-    }
+    });
     return out;
   }
 
@@ -241,6 +345,9 @@
       case "cloze": return buildCloze(candidate.word, words);
       case "grammar": return buildGrammar(candidate.question);
       case "conjug": return buildConjugation(candidate.verb, candidate.tense);
+      case "write-es": return buildWriteTranslation(candidate.word);
+      case "write-cloze": return buildWriteCloze(candidate.word);
+      case "write-conjug": return buildWriteConjugation(candidate.verb, candidate.tense);
       default: return null;
     }
   }
@@ -282,6 +389,7 @@
 
   global.Quiz = {
     build: build,
+    checkAnswer: checkAnswer,
     surfaceForms: surfaceForms,
     findInSentence: findInSentence,
     shuffle: shuffle,

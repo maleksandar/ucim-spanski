@@ -9,8 +9,9 @@
   // ove "teme" samo ponavljaju vrstu reči, koja ima svoj filter — ne nude ništa novo
   var POS_TOPICS = ["Verbos", "Adjetivos", "Expresiones"];
   var INFINITIVE = /^([a-zá-úñ]+(?:ar|er|ir|ár|ér|ír)(?:se)?)/i;
-  // sve što nije slovo ili cifra na početku (¡, ¿, navodnici…) ne sme u ključ za sortiranje
-  var LEADING_JUNK = /^[^0-9A-Za-zÀ-ÖØ-öø-ÿ]+/;
+  // sve što nije slovo ili cifra na početku (¡, ¿, navodnici…) ne sme u ključ za
+  // sortiranje; opseg ide do Latin Extended-A, inače bi "šah" ostao kao "ah"
+  var LEADING_JUNK = /^[^0-9A-Za-zÀ-ÖØ-öø-ÿĀ-ſ]+/;
 
   /** Član se odvaja samo kod imenica; kod izraza je "una vez" deo samog izraza. */
   function splitArticle(word) {
@@ -30,6 +31,8 @@
     word.article = parts.article;
     word.root = parts.rest;
     word.sortKey = parts.rest.replace(LEADING_JUNK, "");
+    // isti ključ, ali sa srpske strane — za sortiranje po abecednom redu prevoda
+    word.sortKeySr = String(word.sr || "").replace(LEADING_JUNK, "");
     word.speakText = parts.article
       ? firstAlternative(parts.article) + " " + firstAlternative(parts.rest)
       : firstAlternative(word.es);

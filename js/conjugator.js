@@ -114,6 +114,9 @@
     volver: {
       presente: ["vuelvo", "vuelves", "vuelve", "volvemos", "volvéis", "vuelven"]
     },
+    devolver: {
+      presente: ["devuelvo", "devuelves", "devuelve", "devolvemos", "devolvéis", "devuelven"]
+    },
     encontrar: {
       presente: ["encuentro", "encuentras", "encuentra", "encontramos", "encontráis", "encuentran"]
     },

@@ -404,6 +404,34 @@ select.wide {
 .option.wrong .key { background: var(--bad); color: #fff; }
 .option.dim { opacity: .5; }
 
+/* ---------- dopisivanje odgovora ---------- */
+
+.answer-form {
+  display: flex;
+  gap: .5rem;
+  margin-top: .9rem;
+}
+
+.answer-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: .7rem .85rem;
+  font-size: 1.05rem;
+  font-family: inherit;
+  color: inherit;
+}
+.answer-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.answer-input.correct { border-color: var(--ok); }
+.answer-input.wrong { border-color: var(--bad); }
+.answer-input:disabled { opacity: 1; }
+
+.answer-form .btn { flex: none; }
+
+.accent-hint { font-weight: 600; }
+
 .verdict {
   margin-top: .9rem;
   border-radius: 10px;
@@ -719,8 +747,32 @@ table.forms-simple td { font-weight: 600; }
 
 /* ---------- čipovi za vrstu reči ---------- */
 
-.pos-filter {
+/* čipovi i prekidač dele isti red: čipovi se skroluju, prekidač ostaje vidljiv */
+.toolbar-row {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 0;
+}
+
+.base-switch {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.base-switch-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 700;
+  color: var(--muted);
+}
+@media (max-width: 560px) { .base-switch-label { display: none; } }
+
+.pos-filter {
+  flex: 1 1 auto;
   display: flex;
   gap: .35rem;
   overflow-x: auto;
@@ -738,9 +790,9 @@ table.forms-simple td { font-weight: 600; }
   color: var(--muted);
   font-size: 1rem;
 }
-.word-es { font-weight: 650; font-size: 1.05rem; }
-.word-sr { color: var(--muted); }
-.word-sr::before { content: "· "; }
+.word-main { font-weight: 650; font-size: 1.05rem; }
+.word-alt { color: var(--muted); }
+.word-alt::before { content: "· "; }
 .tag {
   font-size: .68rem;
   text-transform: uppercase;

@@ -7,8 +7,10 @@
 
   var TYPE_LABELS = {
     "es-sr": "typeEsSr", "sr-es": "typeSrEs", cloze: "typeCloze",
-    grammar: "typeGrammar", conjug: "typeConjug"
+    grammar: "typeGrammar", conjug: "typeConjug",
+    "write-es": "typeWriteEs", "write-cloze": "typeWriteCloze", "write-conjug": "typeWriteConjug"
   };
+  var ALL_TYPES = Object.keys(TYPE_LABELS);
 
   // ruta ↔ prikaz; hash je jedini izvor istine za to gde smo
   var ROUTES = { quiz: "#/quiz", vocab: "#/vocab", grammar: "#/grammar", stats: "#/stats" };
@@ -16,10 +18,13 @@
   var state = {
     view: "quiz",
     prefs: {
-      types: ["es-sr", "sr-es", "cloze", "grammar", "conjug"],
+      types: ["es-sr", "sr-es", "cloze", "grammar", "conjug",
+              "write-es", "write-cloze", "write-conjug"],
       lessons: [],
       length: 15,
-      mode: "srs"
+      mode: "srs",
+      // "es" ili "sr": po kojim rečima se rečnik sortira i koja je glavna u kartici
+      vocabBase: "es"
     },
     quiz: null,
     menuOpen: false,
@@ -75,6 +80,9 @@
         if (Array.isArray(saved.lessons)) state.prefs.lessons = saved.lessons;
         if (saved.length) state.prefs.length = saved.length;
         if (saved.mode) state.prefs.mode = saved.mode;
+        if (saved.vocabBase === "sr" || saved.vocabBase === "es") {
+          state.prefs.vocabBase = saved.vocabBase;
+        }
       }
     } catch (e) { /* ignore */ }
   }
@@ -193,7 +201,7 @@
   function renderQuizSetup() {
     var typeField = el("div", { class: "field" }, [
       el("label", { class: "head", text: t("quizTypes") }),
-      el("div", { class: "chips" }, Object.keys(TYPE_LABELS).map(function (type) {
+      el("div", { class: "chips" }, ALL_TYPES.map(function (type) {
         return chip(t(TYPE_LABELS[type]), state.prefs.types.indexOf(type) !== -1, function () {
           var at = state.prefs.types.indexOf(type);
           if (at === -1) state.prefs.types.push(type);
@@ -289,6 +297,35 @@
     global.scrollTo(0, 0);
   }
 
+  /**
+   * Polje za dopisivanje odgovora. Nema ponuđenih opcija — proverava se upisan
+   * tekst, a akcenti se pri poređenju zanemaruju.
+   */
+  function answerField(question, answered) {
+    var input = el("input", {
+      class: "answer-input" + (answered ? (answered.correct ? " correct" : " wrong") : ""),
+      type: "text", autocomplete: "off", autocapitalize: "off",
+      autocorrect: "off", spellcheck: "false", lang: "es",
+      placeholder: t("typeAnswer"),
+      value: answered ? answered.chosen : "",
+      disabled: answered ? "disabled" : null
+    });
+
+    var form = el("form", {
+      class: "answer-form",
+      onsubmit: function (ev) { ev.preventDefault(); answer(input.value); }
+    }, [
+      input,
+      el("button", {
+        class: "btn", type: "submit", disabled: answered ? "disabled" : null
+      }, [t("checkAnswer")])
+    ]);
+
+    // kursor odmah u polju: pitanje se rešava kucanjem, ne mišem
+    if (!answered) global.setTimeout(function () { input.focus(); }, 0);
+    return form;
+  }
+
   function renderQuiz() {
     var quiz = state.quiz;
     if (!quiz.questions.length) {
@@ -312,13 +349,13 @@
 
     var promptText = question.prompt;
     var promptNode;
-    if (question.type === "cloze") {
+    if (question.type === "cloze" || question.type === "write-cloze") {
       promptNode = el("p", { class: "q-prompt" }, promptText.split("_____").reduce(function (acc, part, i) {
         if (i) acc.push(el("span", { class: "blank", text: "_____" }));
         acc.push(document.createTextNode(part));
         return acc;
       }, []));
-    } else if (question.type === "conjug") {
+    } else if (question.type === "conjug" || question.type === "write-conjug") {
       promptNode = el("p", { class: "q-prompt" }, [
         question.prompt, " ",
         el("span", { class: "muted", style: "font-weight:400;font-size:1rem" }, ["→ " + question.person])
@@ -327,25 +364,26 @@
       promptNode = el("p", { class: "q-prompt", text: promptText });
     }
 
-    var subText = question.type === "conjug"
+    var subText = question.type === "conjug" || question.type === "write-conjug"
       ? t("tense")[question.tense] + " · " + question.sub
       : question.sub;
 
-    var options = el("div", { class: "options" }, question.options.map(function (option, i) {
-      var classes = "option";
-      if (answered) {
-        if (option === question.answer) classes += " correct";
-        else if (option === answered.chosen) classes += " wrong";
-        else classes += " dim";
-      }
-      return el("button", {
-        class: classes, type: "button", disabled: answered ? "disabled" : null,
-        onclick: function () { answer(option); }
-      }, [
-        el("span", { class: "key", text: String(i + 1) }),
-        el("span", { text: option })
-      ]);
-    }));
+    var options = question.input ? answerField(question, answered)
+      : el("div", { class: "options" }, question.options.map(function (option, i) {
+          var classes = "option";
+          if (answered) {
+            if (option === question.answer) classes += " correct";
+            else if (option === answered.chosen) classes += " wrong";
+            else classes += " dim";
+          }
+          return el("button", {
+            class: classes, type: "button", disabled: answered ? "disabled" : null,
+            onclick: function () { answer(option); }
+          }, [
+            el("span", { class: "key", text: String(i + 1) }),
+            el("span", { text: option })
+          ]);
+        }));
 
     var body = [bar,
       el("span", { class: "q-type", text: t(TYPE_LABELS[question.type]) }),
@@ -362,6 +400,10 @@
       var explain = question.explain ? pick(question.explain) : "";
       var verdict = el("div", { class: "verdict " + (ok ? "ok" : "bad") }, [
         el("strong", { text: ok ? t("correct") : t("wrong") + " — " + t("correctAnswer") + ": " + question.answer }),
+        // priznali smo odgovor bez akcenata, ali neka se vidi kako se stvarno piše
+        answered.accentHint
+          ? el("span", { class: "accent-hint", text: t("accentHint") + " " + answered.accentHint })
+          : null,
         explain ? el("span", { text: explain }) : null,
         question.example ? el("div", { class: "ex" }, [
           question.example.es, " ", speakButton(question.example.es),
@@ -387,8 +429,23 @@
     var quiz = state.quiz;
     if (quiz.answers[quiz.index]) return;
     var question = quiz.questions[quiz.index];
-    var correct = chosen === question.answer;
-    quiz.answers[quiz.index] = { chosen: chosen, correct: correct };
+    var correct, accentHint = "";
+
+    if (question.input) {
+      var typed = String(chosen == null ? "" : chosen).trim();
+      if (!typed) return;                  // prazno polje se ne računa kao greška
+      var matched = global.Quiz.checkAnswer(question, typed);
+      correct = Boolean(matched);
+      if (correct && matched.toLowerCase() !== typed.toLowerCase() &&
+          global.TextUtil.hasDiacritics(matched)) {
+        accentHint = matched;
+      }
+      chosen = typed;
+    } else {
+      correct = chosen === question.answer;
+    }
+
+    quiz.answers[quiz.index] = { chosen: chosen, correct: correct, accentHint: accentHint };
     global.SRS.record(question.srsId, correct);
     render();
   }
@@ -475,9 +532,7 @@
       return global.Store.matchesSearch(w, vocab.search);
     });
 
-    // uvek po korenu reči: ni član ni vodeća interpunkcija ne pomeraju redosled
-    function byRoot(a, b) { return a.sortKey.localeCompare(b.sortKey, "es"); }
-
+    var byRoot = wordComparator();
     if (vocab.sort === "alpha") {
       words.sort(byRoot);
     } else if (vocab.sort === "topic") {
@@ -490,6 +545,21 @@
       });
     }
     return words;
+  }
+
+  /**
+   * Poređenje po glavnoj reči: španski ide po korenu (bez člana i vodeće
+   * interpunkcije), srpski po prevodu i srpskom abecednom redu — "sr-Latn"
+   * je jedini koji č, ć, dž, đ, š i ž stavlja na pravo mesto.
+   */
+  function wordComparator() {
+    if (state.prefs.vocabBase === "sr") {
+      return function (a, b) {
+        return a.sortKeySr.localeCompare(b.sortKeySr, "sr-Latn") ||
+          a.sortKey.localeCompare(b.sortKey, "es");
+      };
+    }
+    return function (a, b) { return a.sortKey.localeCompare(b.sortKey, "es"); };
   }
 
   /** Tabela promena za glagol, imenicu ili pridev; null ako je nemamo. */
@@ -585,6 +655,17 @@
       body.appendChild(holder);
     }
 
+    // prekidač u traci bira koja reč je glavna; druga ostaje kao dopuna
+    var srFirst = state.prefs.vocabBase === "sr";
+    var headWords = srFirst
+      ? [el("span", { class: "word-main", text: word.sr }),
+         el("span", { class: "word-alt", text: word.es }),
+         speakButton(word.speakText)]
+      : [el("span", { class: "word-main", text: word.root }),
+         word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
+         speakButton(word.speakText),
+         el("span", { class: "word-alt", text: word.sr })];
+
     var head = el("div", {
       class: "word-head",
       role: "button",
@@ -594,17 +675,13 @@
       onkeydown: function (ev) {
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onToggle(word.id); }
       }
-    }, [
-      el("span", { class: "word-es", text: word.root }),
-      word.article ? el("span", { class: "word-art", text: "(" + word.article + ")" }) : null,
-      speakButton(word.speakText),
-      el("span", { class: "word-sr", text: word.sr }),
+    }, headWords.concat([
       el("span", { class: "tag" }, [
         el("span", { class: "tag-full", text: posLabel }),
         el("span", { class: "tag-short", text: t("posShort")[word.pos] || posLabel })
       ]),
       el("span", { class: "word-caret", "aria-hidden": "true" })
-    ]);
+    ]));
 
     var card = el("div", { class: "word" + (open ? " open" : "") }, [head, body]);
     card.dataset.wordId = word.id;
@@ -685,12 +762,31 @@
       picker({
         label: t("sortBy"), value: vocab.sort, defaultValue: "alpha",
         options: [
-          { value: "alpha", label: t("sortAlpha") },
+          { value: "alpha",
+            label: state.prefs.vocabBase === "sr" ? t("sortAlphaSr") : t("sortAlphaEs") },
           { value: "lesson", label: t("sortLesson") },
           { value: "topic", label: t("sortTopic") }
         ],
         onChange: function (chosen) { vocab.sort = chosen; update(); }
       })
+    ]);
+
+    // prekidač ŠPA/SRP: menja i redosled i to koja reč stoji kao glavna u kartici
+    var baseSwitch = el("div", { class: "base-switch", role: "group",
+      "aria-label": t("sortLangLabel"), title: t("sortLangHint") }, [
+      el("span", { class: "base-switch-label", text: t("sortLangLabel") }),
+      el("div", { class: "lang-switch" }, ["es", "sr"].map(function (base) {
+        return el("button", {
+          type: "button",
+          "aria-pressed": String(state.prefs.vocabBase === base),
+          onclick: function () {
+            if (state.prefs.vocabBase === base) return;
+            state.prefs.vocabBase = base;
+            savePrefs();
+            renderMain();
+          }
+        }, [base === "sr" ? t("sortLangSr") : t("sortLangEs")]);
+      }))
     ]);
 
     var posChips = el("div", { class: "pos-filter" }, ["sustantivo", "verbo", "adjetivo", "adverbio", "expresión"]
@@ -708,7 +804,7 @@
         oninput: function (ev) { vocab.search = ev.target.value; update(); }
       }),
       filters,
-      posChips
+      el("div", { class: "toolbar-row" }, [posChips, baseSwitch])
     ]);
 
     update();
@@ -770,7 +866,7 @@
     }
 
     var types = row.types || [];
-    var main = types.length >= 5
+    var main = types.length >= ALL_TYPES.length
       ? t("allTypes")
       : types.map(function (type) { return t("typeShort")[type] || type; }).join(", ");
 

@@ -24,8 +24,11 @@ Ako skripta ne prijavi ništa novo, posao je gotov.
 
 **Već pokriveno, ne pravi ponovo:** `9.7 Notas.pdf` je isti sadržaj kao
 `9.7 Notas.odt` (lekcija `2026-07-09`), a `23.07 reporte (1).odt` je identična
-kopija `23.07 reporte.odt` (lekcija `2026-07-23-reporte`). Skripta ih izvlači jer
-su zasebni fajlovi, ali lekcije za njih već postoje.
+kopija `23.07 reporte.odt` (lekcija `2026-07-23-reporte`). Isto važi za
+`notas 20.8 (1).odt` (kopija `notas 20.8.odt`, lekcija `2026-08-20`) i
+`MUCHO_BIEN_.pptx.pdf` (isti sadržaj kao `MUCHO_BIEN_.pptx`, lekcija
+`2026-08-19-muy-mucho`). Skripta ih izvlači jer su zasebni fajlovi, ali lekcije
+za njih već postoje.
 
 ### 2. Napravi lekciju
 

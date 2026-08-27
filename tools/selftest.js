@@ -65,7 +65,22 @@ S.words.forEach((w) => {
   if (w.pos === "sustantivo" && /^(el|la|los|las|un|una|unos|unas)\s/i.test(w.sortKey)) {
     problems.push(`član ostao u ključu: ${w.id} → ${JSON.stringify(w.sortKey)}`);
   }
+  if (!w.sortKeySr || !w.sortKeySr.trim()) problems.push(`prazan srpski ključ: ${w.id}`);
+  // "šah" ne sme da postane "ah": č, ć, đ, š i ž su slova, ne interpunkcija
+  if (/^[^0-9A-Za-zÀ-ÖØ-öø-ÿĀ-ſ]/.test(w.sortKeySr)) {
+    problems.push(`srpski ključ počinje interpunkcijom: ${w.id} → ${JSON.stringify(w.sortKeySr)}`);
+  }
+  if (w.sortKeySr !== w.sr.trim() && !/^[^0-9A-Za-zÀ-ÖØ-öø-ÿĀ-ſ]/.test(w.sr)) {
+    problems.push(`srpski ključ okrnjen: ${w.id} → ${JSON.stringify(w.sortKeySr)}`);
+  }
 });
+
+// 1d. srpsko sortiranje mora da poštuje č, ć, dž, đ, š i ž ("sr-Latn", ne "sr")
+const srAzbuka = ["cvet", "čas", "ćup", "dan", "džak", "đak", "šuma", "zima", "žena"];
+const srSorted = srAzbuka.slice().sort((a, b) => a.localeCompare(b, "sr-Latn"));
+if (srSorted.join(" ") !== srAzbuka.join(" ")) {
+  problems.push(`srpski abecedni red nije podržan: ${srSorted.join(" ")}`);
+}
 for (let i = 1; i < S.words.length; i++) {
   if (S.words[i - 1].sortKey.localeCompare(S.words[i].sortKey, "es") > 0) {
     problems.push(`redosled narušen: ${S.words[i - 1].es} pre ${S.words[i].es}`);
@@ -98,20 +113,41 @@ const clozeReady = S.words.filter((w) =>
 );
 
 // 4. generiši kvizove svih tipova i proveri strukturu
-const types = ["es-sr", "sr-es", "cloze", "grammar", "conjug"];
+const choiceTypes = ["es-sr", "sr-es", "cloze", "grammar", "conjug"];
+const writeTypes = ["write-es", "write-cloze", "write-conjug"];
+const types = choiceTypes.concat(writeTypes);
 types.forEach((type) => {
+  const written = writeTypes.includes(type);
   const qs = sandbox.Quiz.build({ types: [type], lessons: [], length: 40, mode: "random" });
   if (!qs.length) { problems.push(`tip bez pitanja: ${type}`); return; }
   qs.forEach((q) => {
-    if (q.options.length !== 4) problems.push(`${type}: nema 4 opcije — ${q.prompt}`);
-    if (!q.options.includes(q.answer)) problems.push(`${type}: odgovor van opcija — ${q.prompt}`);
-    if (new Set(q.options).size !== 4) problems.push(`${type}: ponovljena opcija — ${q.prompt} [${q.options}]`);
-    if (type === "cloze" && !q.prompt.includes("_____")) problems.push(`cloze bez praznine: ${q.prompt}`);
-    if (type === "cloze" && q.prompt.toLowerCase().includes(q.answer.toLowerCase())) {
-      problems.push(`cloze otkriva odgovor: ${q.prompt} → ${q.answer}`);
+    if (written) {
+      if (!q.input) problems.push(`${type}: nije polje za upis — ${q.prompt}`);
+      if (q.options) problems.push(`${type}: dopisivanje ne sme da nudi opcije — ${q.prompt}`);
+      if (!q.accept || !q.accept.length) problems.push(`${type}: nema prihvaćenih oblika — ${q.prompt}`);
+      if (!q.answer) problems.push(`${type}: nema odgovora — ${q.prompt}`);
+      // tačan odgovor mora da prođe proveru, i sa akcentima i bez njih
+      if (!sandbox.Quiz.checkAnswer(q, q.answer)) {
+        problems.push(`${type}: tačan odgovor odbijen — ${q.answer}`);
+      }
+      const bezAkcenata = sandbox.TextUtil.normalizeAnswer(q.answer);
+      if (!sandbox.Quiz.checkAnswer(q, bezAkcenata.toUpperCase() + " ")) {
+        problems.push(`${type}: odgovor bez akcenata odbijen — ${q.answer}`);
+      }
+      if (sandbox.Quiz.checkAnswer(q, "")) problems.push(`${type}: prazan upis prihvaćen`);
+    } else {
+      if (q.options.length !== 4) problems.push(`${type}: nema 4 opcije — ${q.prompt}`);
+      if (!q.options.includes(q.answer)) problems.push(`${type}: odgovor van opcija — ${q.prompt}`);
+      if (new Set(q.options).size !== 4) problems.push(`${type}: ponovljena opcija — ${q.prompt} [${q.options}]`);
+    }
+    if (type === "cloze" || type === "write-cloze") {
+      if (!q.prompt.includes("_____")) problems.push(`${type} bez praznine: ${q.prompt}`);
+      if (q.prompt.toLowerCase().includes(q.answer.toLowerCase())) {
+        problems.push(`${type} otkriva odgovor: ${q.prompt} → ${q.answer}`);
+      }
     }
   });
-  console.log(`${type.padEnd(8)} → ${qs.length} pitanja`);
+  console.log(`${type.padEnd(12)} → ${qs.length} pitanja`);
 });
 
 // 5. mešani kviz + SRS

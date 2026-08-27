@@ -135,7 +135,39 @@
       "needs_review": false,
       "chars": 4024,
       "extracted_at": "2026-08-20T12:07:44+00:00"
+    },
+    "10_Por_o_Para_editable.pptx": {
+      "sha256": "8dde5249a9b605396ab9b0af99f495b70e67c30102e373a63978dfd39772e30b",
+      "staging": "10-por-o-para-editable.pptx.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 10100,
+      "extracted_at": "2026-08-27T17:39:26+00:00"
+    },
+    "MUCHO_BIEN_.pptx.pdf": {
+      "sha256": "ea83a488d6c0a76a64dd02b24348a37b3bc32cc9200e3b54be6e5e23cf8a4a8a",
+      "staging": "mucho-bien-pptx.pdf.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 8678,
+      "extracted_at": "2026-08-27T17:39:26+00:00"
+    },
+    "notas 20.8 (1).odt": {
+      "sha256": "829dbb9b467ff05944f4a5ddfa6d2620ca2b78f706c2aa95afed0ead555edeff",
+      "staging": "notas-20-8-1.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 7166,
+      "extracted_at": "2026-08-27T17:39:26+00:00"
+    },
+    "notas 20.8.odt": {
+      "sha256": "829dbb9b467ff05944f4a5ddfa6d2620ca2b78f706c2aa95afed0ead555edeff",
+      "staging": "notas-20-8.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 7166,
+      "extracted_at": "2026-08-27T17:39:26+00:00"
     }
   },
-  "last_run": "2026-08-20T12:07:44+00:00"
+  "last_run": "2026-08-27T17:39:26+00:00"
 }
