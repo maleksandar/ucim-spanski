@@ -156,24 +156,6 @@ lesson({
           explain: { es: "En el interior → dentro de.", sr: "Unutra → dentro de." } }
       ] },
 
-    { id: "para-por",
-      title: { es: "Para vs. por", sr: "Para naspram por" },
-      explanation: {
-        es: "Para indica finalidad, objetivo o destinatario: Este regalo es para ti. Por indica causa o motivo: Lo hice por curiosidad.",
-        sr: "Para označava svrhu, cilj ili primaoca: Este regalo es para ti. Por označava uzrok ili razlog: Lo hice por curiosidad."
-      },
-      questions: [
-        { id: "para-por-1", sentence: "Este regalo es ___ ti.",
-          options: ["para", "por", "a", "de"], answer: "para",
-          explain: { es: "Destinatario → para.", sr: "Primalac → para." } },
-        { id: "para-por-2", sentence: "Lo hice ___ curiosidad.",
-          options: ["por", "para", "con", "de"], answer: "por",
-          explain: { es: "Causa o motivo → por.", sr: "Uzrok ili razlog → por." } },
-        { id: "para-por-3", sentence: "Es importante ___ los seres humanos.",
-          options: ["para", "por", "a", "en"], answer: "para",
-          explain: { es: "Destinatario o finalidad → para.", sr: "Primalac ili svrha → para." } }
-      ] },
-
     { id: "similar-a",
       title: { es: "Similar a, no «similar como»", sr: "Similar a, a ne „similar como“" },
       explanation: {
