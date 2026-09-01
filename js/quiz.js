@@ -202,18 +202,32 @@
 
   // ---------- pitanja koja se dopisuju (bez ponuđenih odgovora) ----------
 
-  /** Oblici koje primamo kao tačan upis: i sa članom i bez njega, i alternative. */
+  /**
+   * Oblici koje primamo kao tačan upis. Kod imenica član je opcion — i „el
+   * techo“ i „techo“ prolaze. Kod izraza se član ne dira, jer je „una vez“ deo
+   * samog izraza. Alternative razdvojene kosom crtom se primaju svaka za sebe.
+   */
   function accepted(word) {
     var out = [];
+    var noun = word.pos === "sustantivo";
     function add(value) {
       var clean = String(value || "").trim();
       if (clean && out.indexOf(clean) === -1) out.push(clean);
     }
+    var bare = stripArticle(word.es);
     add(word.es);
-    add(stripArticle(word.es));
-    word.es.split("/").forEach(function (part) {
+    if (noun) {
+      add(bare);
+      // "el/la dependiente" se piše i kao "el dependiente" i kao "la dependiente"
+      var article = (ARTICLE.exec(word.es) || [])[1] || "";
+      if (article.indexOf("/") !== -1) {
+        article.split("/").forEach(function (one) { add(one.trim() + " " + bare); });
+      }
+    }
+    // kod imenica delimo oblik bez člana, da "el/la dependiente" ne primi samo "el"
+    (noun ? bare : word.es).split("/").forEach(function (part) {
       add(part);
-      add(stripArticle(part));
+      if (noun) add(stripArticle(part));
     });
     return out;
   }
@@ -271,14 +285,38 @@
 
   /**
    * Poredi upisan odgovor sa prihvaćenim oblicima: akcenti, velika slova i
-   * interpunkcija se zanemaruju. Vraća oblik koji se poklopio, ili false.
+   * interpunkcija se zanemaruju. Kod imenica su u listi i oblik sa članom i
+   * bez njega, pa je član opcion — ali pogrešan član ("la techo") i dalje
+   * pada. Vraća oblik koji se poklopio, ili false.
    */
   function checkAnswer(question, typed) {
-    var value = global.TextUtil.normalizeAnswer(typed);
+    var norm = global.TextUtil.normalizeAnswer;
+    var value = norm(typed);
     if (!value) return false;
     var list = question.accept || [question.answer];
     for (var i = 0; i < list.length; i++) {
-      if (global.TextUtil.normalizeAnswer(list[i]) === value) return list[i];
+      if (norm(list[i]) === value) return list[i];
+    }
+    return false;
+  }
+
+  // kod kraće reči jedno slovo razlike je najčešće druga reč (ser/ver), pa se
+  // druga prilika nudi tek od četiri slova
+  var NEAR_MISS_MIN = 4;
+
+  /**
+   * Je li upisan odgovor promašen za tačno jedno slovo? Tada se ne računa
+   * odmah kao greška — korisnik dobija priliku da se ispravi.
+   */
+  function nearMiss(question, typed) {
+    var norm = global.TextUtil.normalizeAnswer;
+    var value = norm(typed);
+    if (!value) return false;
+    var list = question.accept || [question.answer];
+    for (var i = 0; i < list.length; i++) {
+      var target = norm(list[i]);
+      if (target.length < NEAR_MISS_MIN) continue;
+      if (global.TextUtil.editDistance(value, target, 1) === 1) return true;
     }
     return false;
   }
@@ -390,6 +428,7 @@
   global.Quiz = {
     build: build,
     checkAnswer: checkAnswer,
+    nearMiss: nearMiss,
     surfaceForms: surfaceForms,
     findInSentence: findInSentence,
     shuffle: shuffle,

@@ -167,7 +167,31 @@
       "needs_review": false,
       "chars": 7166,
       "extracted_at": "2026-08-27T17:39:26+00:00"
+    },
+    "13_SE_impersonal.pptx": {
+      "sha256": "b344657be0bbe161ae107a5de4597a4079c8728708636ae4d6b84e944a0056a5",
+      "staging": "13-se-impersonal.pptx.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 769,
+      "extracted_at": "2026-09-01T21:33:03+00:00"
+    },
+    "27.8.odt": {
+      "sha256": "974a73c8ae98cefb967709fddac2074546bd763d3ba1057a8021f2db918de15a",
+      "staging": "27-8.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 2919,
+      "extracted_at": "2026-09-01T21:33:03+00:00"
+    },
+    "notas 1.9.odt": {
+      "sha256": "9600ece2f32b21e36322bc27db876a1c305e76cf70562ae939014bce47e67c62",
+      "staging": "notas-1-9.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 7444,
+      "extracted_at": "2026-09-01T21:33:03+00:00"
     }
   },
-  "last_run": "2026-08-27T17:39:26+00:00"
+  "last_run": "2026-09-01T21:33:03+00:00"
 }

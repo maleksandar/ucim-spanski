@@ -283,13 +283,13 @@
             answer: q.answer, explain: q.explain, lesson: q.lesson, topicId: q.topicId
           };
         }),
-        index: 0, answers: [], done: false
+        index: 0, answers: [], retries: {}, done: false
       };
     } else {
       state.quiz = {
         meta: { types: options.types.slice(), lessons: options.lessons.slice(), mode: options.mode },
         questions: global.Quiz.build(options),
-        index: 0, answers: [], done: false
+        index: 0, answers: [], retries: {}, done: false
       };
     }
     state.view = "quiz";
@@ -299,30 +299,44 @@
 
   /**
    * Polje za dopisivanje odgovora. Nema ponuđenih opcija — proverava se upisan
-   * tekst, a akcenti se pri poređenju zanemaruju.
+   * tekst, a akcenti se pri poređenju zanemaruju. Ako je prvi pokušaj promašen
+   * za jedno slovo, `retry` nosi ono što je upisano: polje ostaje otvoreno, a
+   * dugme se otključava tek kad se tekst promeni.
    */
-  function answerField(question, answered) {
+  function answerField(question, answered, retry) {
     var input = el("input", {
-      class: "answer-input" + (answered ? (answered.correct ? " correct" : " wrong") : ""),
+      class: "answer-input" +
+        (answered ? (answered.correct ? " correct" : " wrong") : (retry ? " near" : "")),
       type: "text", autocomplete: "off", autocapitalize: "off",
       autocorrect: "off", spellcheck: "false", lang: "es",
       placeholder: t("typeAnswer"),
-      value: answered ? answered.chosen : "",
+      value: answered ? answered.chosen : (retry || ""),
       disabled: answered ? "disabled" : null
     });
+
+    var button = el("button", {
+      class: "btn", type: "submit",
+      disabled: (answered || retry) ? "disabled" : null
+    }, [t("checkAnswer")]);
+
+    if (retry && !answered) {
+      // dok stoji isti tekst, provera nema šta novo da kaže
+      input.oninput = function () { button.disabled = input.value.trim() === retry.trim(); };
+    }
 
     var form = el("form", {
       class: "answer-form",
       onsubmit: function (ev) { ev.preventDefault(); answer(input.value); }
-    }, [
-      input,
-      el("button", {
-        class: "btn", type: "submit", disabled: answered ? "disabled" : null
-      }, [t("checkAnswer")])
-    ]);
+    }, [input, button]);
 
     // kursor odmah u polju: pitanje se rešava kucanjem, ne mišem
-    if (!answered) global.setTimeout(function () { input.focus(); }, 0);
+    if (!answered) {
+      global.setTimeout(function () {
+        input.focus();
+        // kod ispravke kursor ide na kraj, da se slovo dopiše bez brisanja svega
+        if (retry) input.setSelectionRange(input.value.length, input.value.length);
+      }, 0);
+    }
     return form;
   }
 
@@ -368,7 +382,7 @@
       ? t("tense")[question.tense] + " · " + question.sub
       : question.sub;
 
-    var options = question.input ? answerField(question, answered)
+    var options = question.input ? answerField(question, answered, quiz.retries[quiz.index])
       : el("div", { class: "options" }, question.options.map(function (option, i) {
           var classes = "option";
           if (answered) {
@@ -389,7 +403,10 @@
       el("span", { class: "q-type", text: t(TYPE_LABELS[question.type]) }),
       promptNode,
       subText ? el("p", { class: "q-sub", text: subText }) : null,
-      options];
+      options,
+      !answered && quiz.retries[quiz.index]
+        ? el("p", { class: "near-miss", text: t("nearMiss") })
+        : null];
 
     var backBtn = quiz.index > 0
       ? el("button", { class: "btn ghost", type: "button", onclick: previous }, ["← " + t("previous")])
@@ -436,6 +453,12 @@
       if (!typed) return;                  // prazno polje se ne računa kao greška
       var matched = global.Quiz.checkAnswer(question, typed);
       correct = Boolean(matched);
+      // promašaj za jedno slovo još nije greška: jednom po pitanju se vraćamo u polje
+      if (!correct && !quiz.retries[quiz.index] && global.Quiz.nearMiss(question, typed)) {
+        quiz.retries[quiz.index] = typed;
+        render();
+        return;
+      }
       if (correct && matched.toLowerCase() !== typed.toLowerCase() &&
           global.TextUtil.hasDiacritics(matched)) {
         accentHint = matched;

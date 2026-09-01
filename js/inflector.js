@@ -21,7 +21,14 @@
     "primera-clase": null,                 // ustaljen izraz, ostaje u jednini
     "curriculum": { singular: "el currículum", plural: "los currículums" },
     "reel": { singular: "el reel", plural: "los reels" },
-    "clase-turista": { singular: "la clase turista", plural: "las clases turista" }
+    "clase-turista": { singular: "la clase turista", plural: "las clases turista" },
+    "doscientos": null,                    // broj, ne imenica koja se broji
+    "gente": null,                         // zbirna imenica, "las gentes" je nešto drugo
+    "hielo-picado": null,                  // gradivna imenica, ne broji se
+    "suelto": null,                        // sitan novac uopšte, ne komad
+    "anonimato": null,                     // pojam, ne broji se
+    "sedentarismo": null,                  // pojam, ne broji se
+    "ong": { singular: "la ONG", plural: "las ONG" }   // skraćenica se ne menja
   };
 
   function hasFinalAccent(word) {

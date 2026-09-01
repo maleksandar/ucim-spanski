@@ -140,6 +140,11 @@
       presente: ["siento", "sientes", "siente", "sentimos", "sentís", "sienten"],
       indefinido: ["sentí", "sentiste", "sintió", "sentimos", "sentisteis", "sintieron"]
     },
+    // arrepentirse ide po sentir: e → ie u prezentu, e → i u trećem licu indefinida
+    arrepentir: {
+      presente: ["arrepiento", "arrepientes", "arrepiente", "arrepentimos", "arrepentís", "arrepienten"],
+      indefinido: ["arrepentí", "arrepentiste", "arrepintió", "arrepentimos", "arrepentisteis", "arrepintieron"]
+    },
     pedir: {
       presente: ["pido", "pides", "pide", "pedimos", "pedís", "piden"],
       indefinido: ["pedí", "pediste", "pidió", "pedimos", "pedisteis", "pidieron"]
@@ -198,6 +203,14 @@
     },
     leer: {
       indefinido: ["leí", "leíste", "leyó", "leímos", "leísteis", "leyeron"]
+    },
+    // i → y između samoglasnika, kao kod leer
+    creer: {
+      indefinido: ["creí", "creíste", "creyó", "creímos", "creísteis", "creyeron"]
+    },
+    // naglasak na osnovi u jednini i trećem licu množine: envío, envías…
+    enviar: {
+      presente: ["envío", "envías", "envía", "enviamos", "enviáis", "envían"]
     },
     reír: {
       presente: ["río", "ríes", "ríe", "reímos", "reís", "ríen"],
