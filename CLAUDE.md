@@ -103,17 +103,36 @@ kratku rečenicu u duhu ostalih.
 Ako lekcija uvodi glagol koji nije u `data/verbs.js`, dodaj ga:
 
 ```js
-{ inf: "aterrizar", sr: "sleteti", tenses: ["presente", "indefinido", "perfecto"] }
+{ inf: "aterrizar", sr: "sleteti", tenses: ["presente", "indefinido", "imperfecto", "perfecto"] }
 ```
+
+`tenses` je spisak kolona u tabeli promena u rečniku i ujedno spisak vremena
+koja kviz sme da pita za taj glagol. Redosled je uvek isti:
+`presente, indefinido, imperfecto, futuro, perfecto` — upiši samo ona vremena
+koja hoćeš, ali tim redom.
+
+**`presente`, `indefinido` i `imperfecto` idu uz svaki glagol** — ta tri
+vremena smo prešli i svi glagoli u bazi ih imaju. `futuro` i `perfecto` dodaj
+kad glagol ima smisla vežbati i u njima.
 
 Oblici se **računaju** u `js/conjugator.js` — ne upisuju se ručno. Ako je glagol
 nepravilan, dodaj ga u `IRREGULAR` tabelu tamo (redosled lica: yo, tú, él/ella,
 nosotros, vosotros, ellos/ellas). Nepravilan futur ide u `FUTURE_STEMS`,
 nepravilan particip u `IRREGULAR_PARTICIPLES`. Pravopisne izmene
 (-car → qué, -gar → gué, -zar → cé u prvom licu indefinida) se rešavaju pravilom.
+U imperfektu su nepravilna samo tri glagola — `ir`, `ser` i `ver` — i sva tri
+već stoje u `IRREGULAR`; za nov glagol imperfekat nikad ne treba dopisivati.
 
 Proveri nove oblike pre nego što ih ostaviš — pogrešna konjugacija u kvizu je
-gora nego da glagola nema.
+gora nego da glagola nema. Za brzu proveru ispiši celu tabelu:
+
+```bash
+node -e 'const fs=require("fs"),vm=require("vm");
+const s={console,Math,Date,JSON};s.window=s;s.globalThis=s;vm.createContext(s);
+vm.runInContext(fs.readFileSync("js/conjugator.js","utf8"),s);
+["aterrizar"].forEach(v=>["presente","indefinido","imperfecto","futuro","perfecto"]
+  .forEach(t=>{const r=s.Conjugator.conjugate(v,t); if(r) console.log(v,t,r.join(" | "));}));'
+```
 
 ### 4. Regeneriši manifest i proveri
 
