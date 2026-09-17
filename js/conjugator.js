@@ -169,6 +169,23 @@
     proteger: {
       presente: ["protejo", "proteges", "protege", "protegemos", "protegéis", "protegen"]
     },
+    recoger: {
+      presente: ["recojo", "recoges", "recoge", "recogemos", "recogéis", "recogen"]
+    },
+    elegir: {
+      presente: ["elijo", "eliges", "elige", "elegimos", "elegís", "eligen"],
+      indefinido: ["elegí", "elegiste", "eligió", "elegimos", "elegisteis", "eligieron"]
+    },
+    gobernar: {
+      presente: ["gobierno", "gobiernas", "gobierna", "gobernamos", "gobernáis", "gobiernan"]
+    },
+    aprobar: {
+      presente: ["apruebo", "apruebas", "aprueba", "aprobamos", "aprobáis", "aprueban"]
+    },
+    hervir: {
+      presente: ["hiervo", "hierves", "hierve", "hervimos", "hervís", "hierven"],
+      indefinido: ["herví", "herviste", "hirvió", "hervimos", "hervisteis", "hirvieron"]
+    },
     traducir: {
       presente: ["traduzco", "traduces", "traduce", "traducimos", "traducís", "traducen"],
       indefinido: ["traduje", "tradujiste", "tradujo", "tradujimos", "tradujisteis", "tradujeron"]

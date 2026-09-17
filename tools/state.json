@@ -191,7 +191,39 @@
       "needs_review": false,
       "chars": 7444,
       "extracted_at": "2026-09-01T21:33:03+00:00"
+    },
+    "11_PPC_o_Indefinido.pptx": {
+      "sha256": "5d3d928fce649560b27508fc5051221dbc862fd1e990916a99da23e3e720d266",
+      "staging": "11-ppc-o-indefinido.pptx.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 1532,
+      "extracted_at": "2026-09-17T14:48:54+00:00"
+    },
+    "CARNAVAL_IMPERFECTO_FINAL_V3.pptx": {
+      "sha256": "16d4ce94a13d2204791b611f7c0521e6123e854e6945360f99f54dc573fde047",
+      "staging": "carnaval-imperfecto-final-v3.pptx.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 8861,
+      "extracted_at": "2026-09-17T14:48:54+00:00"
+    },
+    "notas 10.9.odt": {
+      "sha256": "52ecd0e2a89047ae6b266ace9457d6256d85210299179583633c8664735bfb98",
+      "staging": "notas-10-9.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 4531,
+      "extracted_at": "2026-09-17T14:48:54+00:00"
+    },
+    "notas 15.9.odt": {
+      "sha256": "91ed411bac493466f46f2abe8e5161e282ae4b6e5735d930ccf816e4be9fc5e6",
+      "staging": "notas-15-9.odt.txt",
+      "status": "new",
+      "needs_review": false,
+      "chars": 5443,
+      "extracted_at": "2026-09-17T14:48:54+00:00"
     }
   },
-  "last_run": "2026-09-01T21:33:03+00:00"
+  "last_run": "2026-09-17T14:48:54+00:00"
 }

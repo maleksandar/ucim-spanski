@@ -1,5 +1,5 @@
 /* Generisano skriptom tools/manifest.py — ne menjaj rucno. */
-window.ASSET_VERSION = "f47593a0";
+window.ASSET_VERSION = "3b2e4840";
 window.LESSON_FILES = [
   "lessons/2026-07-09.js",
   "lessons/2026-07-22.js",
@@ -19,6 +19,10 @@ window.LESSON_FILES = [
   "lessons/2026-08-20.js",
   "lessons/2026-08-27-comunicacion.js",
   "lessons/2026-08-27-por-para.js",
+  "lessons/2026-08-28-ppc-indefinido.js",
   "lessons/2026-08-28-se-impersonal.js",
-  "lessons/2026-09-01.js"
+  "lessons/2026-09-01.js",
+  "lessons/2026-09-10.js",
+  "lessons/2026-09-15.js",
+  "lessons/2026-09-16-carnaval.js"
 ];
